@@ -59,6 +59,16 @@ async function layoutProblems(page: Page): Promise<string[]> {
         if (!inside(el.getBoundingClientRect(), safe)) problems.push(`${id}: ${el.className} outside safe zone`);
       }
 
+      // The photo's box is what the focal point is centered in, so no text panel may cover any of it.
+      const panels = Array.from(root.querySelectorAll('.bd-band, .sp-panel, .fr-text, .t-card, .t-title'));
+      for (const photo of Array.from(root.querySelectorAll('.t-photo'))) {
+        for (const panel of panels) {
+          if (overlaps(panel.getBoundingClientRect(), photo.getBoundingClientRect())) {
+            problems.push(`${id}: photo partly hidden under ${panel.className}`);
+          }
+        }
+      }
+
       const band = root.querySelector('.bd-band');
       for (const photo of Array.from(root.querySelectorAll('.t-photo'))) {
         for (const el of texts) {

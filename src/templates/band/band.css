@@ -1,15 +1,21 @@
-/* Band template. The photo is full-bleed; all text sits on the solid band. */
+/*
+ * Band template. The photo runs to the top and side edges and fills only the space above the band,
+ * so the focal point is centered in what's visible, never under the text. The band grows into the
+ * photo (down to its minimum share) when the text needs room.
+ */
 
-.bd-photo {
-  position: absolute;
-  inset: 0;
+.bd {
+  display: flex;
+  flex-direction: column;
+}
+
+.bd .bd-photo {
+  flex: 1 1 0;
+  min-height: var(--photo-min);
 }
 
 .bd-band {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: none;
   min-height: var(--bd-band);
   max-height: calc(100% - var(--photo-min));
   background: var(--c-panel);
@@ -18,7 +24,7 @@
   padding: var(--gap) var(--safe-x) var(--safe-y);
 }
 .bd--plain .bd-band {
-  height: 100%;
+  flex: 1 1 auto;
   max-height: none;
   padding-top: var(--safe-y);
 }
