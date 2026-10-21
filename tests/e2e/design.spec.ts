@@ -25,7 +25,7 @@ async function uploadBackground(page: Page) {
     ctx.fillRect(1600, 200, 600, 600);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page.getByLabel('Background image', { exact: true }).setInputFiles({
+  await page.locator('#field-background').setInputFiles({
     name: 'backdrop.png',
     mimeType: 'image/png',
     buffer: Buffer.from(b64, 'base64'),
@@ -154,4 +154,64 @@ test('title and body fonts can be chosen separately, and are remembered', async 
   await page.reload();
   await expect(page.getByLabel('Title font')).toHaveValue('source-serif');
   await expect(card(page, 'landscape-hd').locator('[data-slot="title"]')).toHaveCSS('font-family', /Source Serif 4/);
+});
+
+async function uploadFeatured(page: Page, transparent: boolean) {
+  const b64 = await page.evaluate((clear) => {
+    const c = document.createElement('canvas');
+    c.width = 1200;
+    c.height = 900;
+    const ctx = c.getContext('2d')!;
+    if (!clear) {
+      ctx.fillStyle = '#336699';
+      ctx.fillRect(0, 0, 1200, 900);
+    }
+    ctx.fillStyle = '#E8741C';
+    ctx.beginPath();
+    ctx.ellipse(600, 500, 450, 340, 0, 0, Math.PI * 2);
+    ctx.fill();
+    return c.toDataURL('image/png').split(',')[1];
+  }, transparent);
+  await page.locator('#field-image').setInputFiles({
+    name: transparent ? 'pumpkin.png' : 'photo.png',
+    mimeType: 'image/png',
+    buffer: Buffer.from(b64, 'base64'),
+  });
+}
+
+test('one "Photo or illustration" field: transparent images are illustrations, shown whole', async ({ page }) => {
+  await expect(page.getByRole('region', { name: 'Photo or illustration' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Background image' })).toBeVisible();
+  await expect(page.getByLabel('Illustration', { exact: true })).toHaveCount(0);
+
+  await uploadFeatured(page, true);
+  const asIllustration = page.getByRole('radio', { name: 'Illustration' });
+  await expect(asIllustration).toBeChecked();
+  await expect(page.getByRole('group', { name: 'Photo focal point' })).toHaveCount(0);
+  await expect(page.getByLabel('Image description')).toBeVisible();
+
+  await page.getByLabel('Template (required)').selectOption('split');
+  const img = card(page, 'landscape-hd').locator('.t-photo img');
+  await expect(img).toHaveCSS('object-fit', 'contain');
+  // No description needed for a decorative illustration.
+  await page.getByRole('button', { name: 'Check for problems' }).click();
+  await expect(page.getByRole('status')).toHaveText('No problems found.');
+  expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+
+  await page.getByRole('radio', { name: 'Photo' }).check();
+  await expect(img).toHaveCSS('object-fit', 'cover');
+  await expect(page.getByRole('group', { name: 'Photo focal point' })).toBeVisible();
+  await page.getByRole('button', { name: 'Check for problems' }).click();
+  await expect(page.locator('.error-summary')).toContainText('Describe the photo');
+
+  await page.getByLabel('Template (required)').selectOption('type-only');
+  await expect(page.getByRole('region', { name: 'Readability check' })).toContainText(
+    "Type only doesn't show a photo or illustration",
+  );
+});
+
+test('an opaque image is treated as a photo', async ({ page }) => {
+  await uploadFeatured(page, false);
+  await expect(page.getByRole('radio', { name: 'Photo' })).toBeChecked();
+  await expect(page.getByRole('group', { name: 'Photo focal point' })).toBeVisible();
 });

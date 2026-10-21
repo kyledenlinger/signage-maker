@@ -51,12 +51,12 @@ async function uploadPhoto(page: Page, width: number, height: number) {
     },
     [width, height],
   );
-  await page.getByLabel('Photo', { exact: true }).setInputFiles({
+  await page.locator('#field-image').setInputFiles({
     name: 'photo.png',
     mimeType: 'image/png',
     buffer: Buffer.from(b64, 'base64'),
   });
-  await page.getByLabel('Photo description').fill('A blue rectangle');
+  await page.getByLabel('Image description').fill('A blue rectangle');
 }
 
 test('Landscape HD PNG is exactly 1920 × 1080 with the spec file name', async ({ page }) => {
@@ -193,7 +193,7 @@ test('a blocked format is skipped and reported; the rest still export', async ({
     'halloween-game-night_landscape-hd_1920x1080.png',
     'halloween-game-night_portrait-hd_1080x1920.png',
   ]);
-  await expect(page.getByRole('status')).toContainText('with 2 formats. Skipped Letter poster (Photo: 900 px is too small');
+  await expect(page.getByRole('status')).toContainText('with 2 formats. Skipped Letter poster (Photo or illustration: 900 px is too small');
   await expect(page.locator('.export-rows .is-skipped')).toContainText('Letter poster: Skipped');
 
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();

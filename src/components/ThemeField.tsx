@@ -7,27 +7,27 @@ import { fieldId } from './fields';
 
 /**
  * Theme picker: the WFU themes, plus three "Match my images" themes (light, dark, high contrast).
- * Whenever the background, photo or illustration changes, their colors are drawn into all three
+ * Whenever the background image or the photo or illustration changes, their colors are drawn into all three
  * (contrast-safe) and stored with the event.
  */
 export function ThemeField() {
   const { control, register, setValue, getValues } = useFormContext<EventData>();
-  const [background, image, illustration, palettes, themeId] = useWatch({
+  const [background, image, palettes, themeId] = useWatch({
     control,
-    name: ['background', 'image', 'illustration', 'imagePalettes', 'themeId'],
+    name: ['background', 'image', 'imagePalettes', 'themeId'],
   });
   const id = fieldId('themeId');
 
   // useWatch hands back fresh copies of the images on every form change, so key the extraction on
   // their content. Otherwise saving the colors would re-run it, endlessly.
-  const sourceKey = [background, image, illustration]
+  const sourceKey = [background, image]
     .filter((i): i is ImageAsset => i !== null)
     .map((i) => i.dataUrl)
     .join('|');
 
   useEffect(() => {
     let cancelled = false;
-    const images = [getValues('background'), getValues('image'), getValues('illustration')].filter(
+    const images = [getValues('background'), getValues('image')].filter(
       (i): i is ImageAsset => i !== null,
     );
     void palettesFromImages(images).then((next) => {
@@ -64,8 +64,8 @@ export function ThemeField() {
       </select>
       <p className="hint" id={`${id}-hint`}>
         {palettes
-          ? 'Match my images uses colors from your background, photo and illustration, adjusted to pass the contrast rules. Light, dark and high contrast versions are available.'
-          : 'Add a background, photo or illustration to unlock Match my images (light, dark and high contrast).'}
+          ? 'Match my images uses colors from your background image and your photo or illustration, adjusted to pass the contrast rules. Light, dark and high contrast versions are available.'
+          : 'Add a photo, illustration or background image to unlock Match my images (light, dark and high contrast).'}
       </p>
       {palettes && selectedImageTheme && (
         <Swatches name={selectedImageTheme.name} colors={palettes[selectedImageTheme.mode]} />

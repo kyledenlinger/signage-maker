@@ -161,6 +161,16 @@ for (const theme of ['images-light', 'images-dark', 'images-contrast']) {
   });
 }
 
+test('an illustration (shown whole) fits every template and never sits under text', async ({ page }) => {
+  await openMatrix(page, 'black-gold', 'sample', '&ill=1');
+  expect(await page.locator('.t-photo--whole').count()).toBe(24); // 4 templates with an image × 3 × QR on/off
+  const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
+    els.map((e) => e.getAttribute('data-cell')),
+  );
+  expect(notFitting).toEqual([]);
+  expect(await layoutProblems(page)).toEqual([]);
+});
+
 test('rendered sizes keep the hierarchy and the floors', async ({ page }) => {
   await openMatrix(page, 'light', 'sample');
   const sizes = await page
@@ -190,6 +200,21 @@ test.describe('visual snapshots', () => {
         await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}.png`, { maxDiffPixelRatio: 0.01 });
       });
     }
+  }
+
+  // Illustrations, shown whole.
+  for (const [template, preset] of [
+    ['showcase', 'portrait-hd'],
+    ['split', 'landscape-hd'],
+    ['frame', 'square'],
+  ]) {
+    test(`${template} · ${preset} · illustration`, async ({ page }) => {
+      await page.goto(`/gallery.html?template=${template}&format=${preset}&image=1&ill=1&qr=1&fixture=sample&scale=auto`);
+      await page.evaluate(() => document.fonts.ready);
+      const cell = page.locator('[data-cell]');
+      await expect(cell).toHaveAttribute('data-fits', 'true');
+      await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}-illustration.png`, { maxDiffPixelRatio: 0.01 });
+    });
   }
 
   // Background images (Showcase and Type only) and the Match my images theme.

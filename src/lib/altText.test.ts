@@ -15,4 +15,10 @@ describe('exportAltText', () => {
     expect(alt).toContain('Register now! More at');
     expect(alt.endsWith('Photo: Students playing chess.')).toBe(true);
   });
+
+  it('calls an illustration an illustration', () => {
+    const image = { name: 'a.svg', dataUrl: 'data:image/svg+xml,', width: 1, height: 1, originalLongEdge: 1 };
+    const alt = exportAltText({ ...sampleEvent(), image, imageKind: 'illustration', imageDescription: 'A pumpkin' });
+    expect(alt.endsWith('Illustration: A pumpkin.')).toBe(true);
+  });
 });

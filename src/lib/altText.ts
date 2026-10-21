@@ -28,7 +28,9 @@ export function exportAltText(event: EventData): string {
     event.subtitle.trim() && sentence(event.subtitle),
     event.callToAction.trim() && sentence(event.callToAction),
     event.url.trim() && sentence(`More at ${event.displayUrl.trim() || cleanUrl(event.url)}`),
-    event.image && event.imageDescription.trim() && sentence(`Photo: ${event.imageDescription}`),
+    event.image &&
+      event.imageDescription.trim() &&
+      sentence(`${event.imageKind === 'illustration' ? 'Illustration' : 'Photo'}: ${event.imageDescription}`),
   ];
   return parts.filter(Boolean).join(' ');
 }

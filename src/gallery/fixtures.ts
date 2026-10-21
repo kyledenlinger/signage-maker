@@ -18,6 +18,21 @@ export function fixtureBackground(): ImageAsset {
   return { name: 'background.png', dataUrl: canvas.toDataURL('image/png'), width: 2400, height: 2400, originalLongEdge: 2400 };
 }
 
+/** A deterministic illustration: an orange pumpkin on a transparent background. */
+export function fixtureIllustration(): ImageAsset {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1200;
+  canvas.height = 900;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#E8741C';
+  ctx.beginPath();
+  ctx.ellipse(600, 500, 450, 340, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#3A7D2C';
+  ctx.fillRect(570, 60, 60, 120);
+  return { name: 'pumpkin.png', dataUrl: canvas.toDataURL('image/png'), width: 1200, height: 900, originalLongEdge: 1200 };
+}
+
 /** A deterministic test photo drawn on a canvas. */
 export function fixturePhoto(): ImageAsset {
   const canvas = document.createElement('canvas');
@@ -48,6 +63,8 @@ export function fixtureEvent(
     templateId: string;
     themeId: string;
     background?: boolean;
+    /** Use the illustration fixture (shown whole) instead of the photo. */
+    illustration?: boolean;
     fontTitle?: string;
     fontBody?: string;
   },
@@ -58,9 +75,10 @@ export function fixtureEvent(
     templateId: opts.templateId,
     themeId: opts.themeId,
     showQr: opts.qr,
-    image: opts.image ? fixturePhoto() : null,
-    imageDescription: opts.image ? 'Abstract shapes on a blue-to-orange gradient' : '',
-    imageCredit: opts.image ? 'Photo: ZSR Library' : '',
+    image: opts.image ? (opts.illustration ? fixtureIllustration() : fixturePhoto()) : null,
+    imageKind: opts.illustration ? 'illustration' : 'photo',
+    imageDescription: opts.image && !opts.illustration ? 'Abstract shapes on a blue-to-orange gradient' : '',
+    imageCredit: opts.image && !opts.illustration ? 'Photo: ZSR Library' : '',
     background: opts.background ? fixtureBackground() : null,
     fontTitle: opts.fontTitle ?? base.fontTitle,
     fontBody: opts.fontBody ?? base.fontBody,

@@ -59,7 +59,14 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
     if (!FONT_FAMILIES.some((f) => f.id === out[key])) out[key] = blank[key];
   }
   out.image = image(raw.image);
-  out.illustration = image(raw.illustration);
+  if (out.imageKind !== 'photo' && out.imageKind !== 'illustration') out.imageKind = blank.imageKind;
+  // Projects saved before photo and illustration merged: Showcase showed the illustration when both
+  // were set; the other templates only ever showed the photo.
+  const oldIllustration = image(raw.illustration);
+  if (oldIllustration && (!out.image || raw.templateId === 'showcase')) {
+    out.image = oldIllustration;
+    out.imageKind = 'illustration';
+  }
   out.background = image(raw.background);
   const palettes = imagePalettesSchema.safeParse(raw.imagePalettes);
   out.imagePalettes = palettes.success ? palettes.data : null;

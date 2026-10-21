@@ -2,7 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { useFormContext, useWatch, type FieldErrors, type Path } from 'react-hook-form';
 import type { CharLimit } from '../config/limits';
 import { IMAGE_PX } from '../config/limits';
-import { readImageFile } from '../lib/image';
+import { isVector, readImageFile } from '../lib/image';
 import type { EventData, ImageAsset } from '../schema/event';
 
 export type FieldName = Path<EventData>;
@@ -149,26 +149,30 @@ export function SelectField({ name, label, required, options, hint }: SelectFiel
 }
 
 interface ImageFieldProps {
-  name: 'image' | 'illustration' | 'background';
+  name: 'image' | 'background';
   label: string;
   accept: string;
   hint?: string;
   /** Warn when the long edge is under the screen-resolution threshold. */
   checkResolution?: boolean;
+  /** Called after a new file is read in. */
+  onLoaded?: (asset: ImageAsset) => void;
 }
 
-export function ImageField({ name, label, accept, hint, checkResolution }: ImageFieldProps) {
+export function ImageField({ name, label, accept, hint, checkResolution, onLoaded }: ImageFieldProps) {
   const { control, setValue } = useFormContext<EventData>();
   const asset = useWatch({ control, name }) as ImageAsset | null;
   const [readError, setReadError] = useState<string>();
   const id = fieldId(name);
-  const lowRes = checkResolution && asset && asset.originalLongEdge < IMAGE_PX.warnBelow;
+  const lowRes = checkResolution && asset && !isVector(asset) && asset.originalLongEdge < IMAGE_PX.warnBelow;
 
   async function onChange(file: File | undefined) {
     setReadError(undefined);
     if (!file) return;
     try {
-      setValue(name, await readImageFile(file), { shouldDirty: true, shouldValidate: true });
+      const loaded = await readImageFile(file);
+      setValue(name, loaded, { shouldDirty: true, shouldValidate: true });
+      onLoaded?.(loaded);
     } catch (e) {
       setReadError(e instanceof Error ? e.message : 'This file could not be read.');
     }

@@ -193,22 +193,17 @@ export function QrTile({
   );
 }
 
-/** A photo cropped to fill its box, centered on the focal point. Never has text on top. */
+/**
+ * The featured image. A photo fills its box, cropped around the focal point; an illustration is
+ * shown whole. Decorative either way: text never sits on it.
+ */
 export function Photo({ content, className = '' }: { content: SignContent; className?: string }) {
-  if (!content.photo) return null;
+  if (!content.image) return null;
   const { x, y } = content.focus;
+  const whole = content.imageKind === 'illustration';
   return (
-    <div className={`t-photo ${className}`}>
-      <img src={content.photo.dataUrl} alt="" style={{ objectPosition: `${x * 100}% ${y * 100}%` }} />
-    </div>
-  );
-}
-
-export function Illustration({ content, className = '' }: { content: SignContent; className?: string }) {
-  if (!content.illustration) return null;
-  return (
-    <div className={`t-illustration ${className}`}>
-      <img src={content.illustration.dataUrl} alt="" />
+    <div className={`t-photo ${whole ? 't-photo--whole' : ''} ${className}`}>
+      <img src={content.image.dataUrl} alt="" style={whole ? undefined : { objectPosition: `${x * 100}% ${y * 100}%` }} />
     </div>
   );
 }

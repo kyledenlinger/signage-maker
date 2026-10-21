@@ -20,9 +20,10 @@ export interface SignContent {
   callToAction: string;
   url: string;
   qrUrl: string | null;
-  photo: ImageAsset | null;
+  /** The featured image, if the template shows one. */
+  image: ImageAsset | null;
+  imageKind: EventData['imageKind'];
   focus: { x: number; y: number };
-  illustration: ImageAsset | null;
   background: ImageAsset | null;
   backgroundFocus: { x: number; y: number };
   credit: string;
@@ -48,7 +49,7 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
     if (text) date = { kind: 'inline', text, field: 'date' };
   }
 
-  const photo = uses('image') ? event.image : null;
+  const image = uses('image') ? event.image : null;
   const qrUrl = uses('showQr') && event.showQr ? normalizeUrl(event.url) : null;
   return {
     title: event.title.trim(),
@@ -62,12 +63,12 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
     callToAction: uses('callToAction') ? event.callToAction.trim() : '',
     url: uses('url') ? event.displayUrl.trim() || (event.url.trim() ? cleanUrl(event.url) : '') : '',
     qrUrl,
-    photo,
+    image,
+    imageKind: event.imageKind,
     focus: event.imageFocus,
-    illustration: uses('illustration') ? event.illustration : null,
     background: uses('background') ? event.background : null,
     backgroundFocus: event.backgroundFocus,
-    credit: photo && uses('imageCredit') ? event.imageCredit.trim() : '',
+    credit: image && uses('imageCredit') ? event.imageCredit.trim() : '',
     accommodations: event.showAccommodations ? event.accommodations.trim() : '',
     showLockup: event.showLockup,
     logos: uses('logos') ? event.logos : [],

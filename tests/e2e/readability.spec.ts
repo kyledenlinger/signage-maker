@@ -100,12 +100,12 @@ test('focal point moves with the keyboard and crops the photo', async ({ page })
     ctx.fillRect(0, 0, 2400, 1600);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page.getByLabel('Photo', { exact: true }).setInputFiles({
+  await page.locator('#field-image').setInputFiles({
     name: 'photo.png',
     mimeType: 'image/png',
     buffer: Buffer.from(png, 'base64'),
   });
-  await page.getByLabel('Photo description').fill('A blue square');
+  await page.getByLabel('Image description').fill('A blue square');
   await page.getByLabel('Template (required)').selectOption('split');
 
   const slider = page.getByLabel(/Left to right/);

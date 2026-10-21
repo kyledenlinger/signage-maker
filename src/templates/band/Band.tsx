@@ -9,10 +9,10 @@ import './band.css';
 export function Band({ event, theme, format }: TemplateProps) {
   const c = signContent(event, format, bandManifest);
   const o = format.orientation;
-  const classes = ['tpl', 'bd', o === 'landscape' ? 'bd--wide' : 'bd--tall', c.photo ? 'bd--photo' : 'bd--plain'].join(' ');
+  const classes = ['tpl', 'bd', o === 'landscape' ? 'bd--wide' : 'bd--tall', c.image ? 'bd--photo' : 'bd--plain'].join(' ');
 
   return (
-    <div className={classes} style={templateVars(theme, format, { '--bd-band': c.photo ? L.bandHeight[o] : '100%' })}>
+    <div className={classes} style={templateVars(theme, format, { '--bd-band': c.image ? L.bandHeight[o] : '100%' })}>
       <Photo content={c} className="bd-photo" />
       <div className="bd-band" data-fit-region>
         <div className="bd-head" data-fit-region>

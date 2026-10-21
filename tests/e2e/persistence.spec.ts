@@ -107,8 +107,8 @@ test('a saved project reopens identically, with its photo and custom size', asyn
     ctx.fillRect(0, 0, 2400, 1600);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page.getByLabel('Photo', { exact: true }).setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(photo, 'base64') });
-  await page.getByLabel('Photo description').fill('A blue rectangle');
+  await page.locator('#field-image').setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(photo, 'base64') });
+  await page.getByLabel('Image description').fill('A blue rectangle');
   await page.getByLabel(/Left to right/).fill('30');
   await addCustomSize(page, 'Lobby screen', 1366, 768);
   await settle(page);

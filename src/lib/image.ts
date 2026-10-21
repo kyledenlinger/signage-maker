@@ -52,3 +52,30 @@ export async function readImageFile(file: File): Promise<ImageAsset> {
     originalLongEdge: longEdge,
   };
 }
+
+/** SVGs have no pixel resolution to check. */
+export function isVector(asset: Pick<ImageAsset, 'dataUrl'>): boolean {
+  return asset.dataUrl.startsWith('data:image/svg');
+}
+
+/**
+ * Guesses whether an upload is an illustration (shown whole) or a photo (cropped to fill): SVGs and
+ * images with transparent pixels are illustrations.
+ */
+export async function guessImageKind(asset: ImageAsset): Promise<'photo' | 'illustration'> {
+  if (isVector(asset)) return 'illustration';
+  if (!/^data:image\/(png|webp)/.test(asset.dataUrl)) return 'photo';
+  const img = await loadImage(asset.dataUrl);
+  const scale = 64 / Math.max(img.naturalWidth || 1, img.naturalHeight || 1);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return 'photo';
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const data = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 250) return 'illustration';
+  }
+  return 'photo';
+}

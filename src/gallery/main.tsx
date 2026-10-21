@@ -14,7 +14,8 @@ import '../styles/fonts.css';
  *   ?template=split&format=landscape-hd&theme=black-gold&image=1&qr=1&fixture=sample&scale=0.4 (or scale=auto)
  *   ?matrix=1&theme=light   (every template × orientation × image × QR)
  *   Add bg=1 for a background image; theme=images-light|images-dark|images-contrast builds the theme from the images;
- *   fontTitle=lexend&fontBody=inter picks fonts (ids from config/fonts.ts).
+ *   fontTitle=lexend&fontBody=inter picks fonts (ids from config/fonts.ts); ill=1 makes the image an
+ *   illustration (shown whole) instead of a photo.
  */
 
 const params = new URLSearchParams(location.search);
@@ -41,6 +42,7 @@ function Cell({ templateId, formatId, themeId, image, qr, fixture, scale, backgr
         templateId,
         themeId,
         background,
+        illustration: flag('ill', false),
         fontTitle: params.get('fontTitle') ?? undefined,
         fontBody: params.get('fontBody') ?? undefined,
       }),
@@ -49,11 +51,11 @@ function Cell({ templateId, formatId, themeId, image, qr, fixture, scale, backgr
   const [event, setEvent] = useState<EventData | null>(findImageTheme(themeId) ? null : base);
   useEffect(() => {
     if (!findImageTheme(themeId)) return setEvent(base);
-    const images = [base.background, base.image, base.illustration].filter((i): i is ImageAsset => i !== null);
+    const images = [base.background, base.image].filter((i): i is ImageAsset => i !== null);
     void palettesFromImages(images).then((imagePalettes) => setEvent({ ...base, imagePalettes }));
   }, [base, themeId]);
   const [report, setReport] = useState<FitReport>();
-  const id = `${templateId}__${formatId}__${themeId}__img${Number(image)}__qr${Number(qr)}${background ? '__bg1' : ''}`;
+  const id = `${templateId}__${formatId}__${themeId}__img${Number(image)}__qr${Number(qr)}${background ? '__bg1' : ''}${flag('ill', false) ? '__ill' : ''}`;
   return (
     <figure
       className="cell"

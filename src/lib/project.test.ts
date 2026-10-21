@@ -66,3 +66,27 @@ describe('older projects', () => {
     expect(parsed.ok && parsed.event.themeId).toBe('images-light');
   });
 });
+
+describe('projects from before photo and illustration merged', () => {
+  const art = { name: 'pumpkin.svg', dataUrl: 'data:image/svg+xml;base64,AAAA', width: 10, height: 10, originalLongEdge: 10 };
+  const photo = { name: 'photo.jpg', dataUrl: 'data:image/jpeg;base64,AAAA', width: 10, height: 10, originalLongEdge: 10 };
+  const old = (extra: Record<string, unknown>) => {
+    const file = JSON.parse(projectJson(sampleEvent()));
+    file.event = { ...file.event, ...extra };
+    delete file.event.imageKind;
+    return parseProject(file);
+  };
+
+  it('open an illustration on its own as the featured illustration', () => {
+    expect(old({ illustration: art, image: null })).toMatchObject({ ok: true, event: { image: art, imageKind: 'illustration' } });
+  });
+
+  it('keep what each template showed when both were set', () => {
+    expect(old({ illustration: art, image: photo, templateId: 'showcase' })).toMatchObject({
+      event: { image: art, imageKind: 'illustration' },
+    });
+    expect(old({ illustration: art, image: photo, templateId: 'split' })).toMatchObject({
+      event: { image: photo, imageKind: 'photo' },
+    });
+  });
+});

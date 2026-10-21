@@ -63,12 +63,14 @@ export const eventSchema = z
       ),
     displayUrl: text(FIELD_LIMITS.displayUrl),
     showQr: z.boolean(),
+    /** The featured image: a photo or an illustration. */
     image: imageAssetSchema.nullable(),
+    /** A photo fills its space, cropped around imageFocus; an illustration is shown whole. */
+    imageKind: z.enum(['photo', 'illustration']),
     /** Point to keep in view when the photo is cropped, 0–1 from the left and top. */
     imageFocus: focusSchema,
     imageDescription: text(FIELD_LIMITS.imageDescription),
     imageCredit: text(FIELD_LIMITS.imageCredit),
-    illustration: imageAssetSchema.nullable(),
     /** Fills the canvas behind the text panels. Decorative. */
     background: imageAssetSchema.nullable(),
     backgroundFocus: focusSchema,
@@ -93,11 +95,11 @@ export const eventSchema = z
         message: 'End time must be after the start time.',
       });
     }
-    if (e.image && e.imageDescription.trim() === '') {
+    if (e.image && e.imageKind === 'photo' && e.imageDescription.trim() === '') {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['imageDescription'],
-        message: 'Describe the image (used for alt text).',
+        message: 'Describe the photo (used for alt text).',
       });
     }
     if (e.showAccommodations && e.accommodations.trim() === '') {
@@ -130,10 +132,10 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'displayUrl',
   'showQr',
   'image',
+  'imageKind',
   'imageFocus',
   'imageDescription',
   'imageCredit',
-  'illustration',
   'background',
   'backgroundFocus',
   'showLockup',

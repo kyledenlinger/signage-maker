@@ -7,6 +7,7 @@ import { signContent, visibleWords } from '../templates/shared/content';
 import { findTemplate, resolveTemplate } from '../templates/registry';
 import type { FitReport } from '../templates/TemplateRenderer';
 import { contrastRatio } from './contrast';
+import { isVector } from './image';
 import { allFormats, findAnyFormat } from './formatStore';
 
 export type Severity = 'blocking' | 'warning';
@@ -120,10 +121,7 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
   }
 
   if (event.image && !chosen.manifest.usesFields.includes('image')) {
-    out.push(issue('warning', null, 'templateId', `${chosen.manifest.name} doesn't show photos`, 'choose Showcase, Split, Band or Frame to use the photo'));
-  }
-  if (event.illustration && !chosen.manifest.usesFields.includes('illustration')) {
-    out.push(issue('warning', null, 'templateId', `${chosen.manifest.name} doesn't show illustrations`, 'choose Showcase to use the illustration'));
+    out.push(issue('warning', null, 'image', `${chosen.manifest.name} doesn't show a photo or illustration`, 'choose Showcase, Split, Band or Frame to use it'));
   }
 
   const { manifest } = resolveTemplate(event.templateId, event);
@@ -131,8 +129,10 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
     out.push(issue('warning', null, 'templateId', `${manifest.name} doesn't show background images`, 'choose Showcase or Type only to use the background'));
   }
 
-  // Resolution of the images the sign actually shows.
-  const shown = (['image', 'background'] as const).filter((field) => event[field] && manifest.usesFields.includes(field));
+  // Resolution of the raster images the sign actually shows (SVGs scale cleanly).
+  const shown = (['image', 'background'] as const).filter(
+    (field) => event[field] && !isVector(event[field]!) && manifest.usesFields.includes(field),
+  );
   for (const field of shown) {
     const edge = event[field]!.originalLongEdge;
     if (edge < IMAGE_PX.warnBelow) {

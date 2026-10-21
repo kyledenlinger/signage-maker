@@ -20,4 +20,5 @@ export const COMMON_FIELDS: (keyof EventData)[] = [
   'accommodations',
 ];
 
-export const PHOTO_FIELDS: (keyof EventData)[] = ['image', 'imageFocus', 'imageDescription', 'imageCredit'];
+/** The featured image (photo or illustration) and its details. */
+export const PHOTO_FIELDS: (keyof EventData)[] = ['image', 'imageKind', 'imageFocus', 'imageDescription', 'imageCredit'];

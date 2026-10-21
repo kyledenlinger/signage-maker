@@ -31,9 +31,10 @@ describe('event schema', () => {
     expect(issuesFor(long)).toEqual(['highlights.0.value']);
   });
 
-  it('requires a description when a photo is attached', () => {
+  it('requires a description for a photo, not for an illustration', () => {
     const image = { name: 'a.jpg', dataUrl: 'data:', width: 10, height: 10, originalLongEdge: 10 };
     expect(issuesFor({ ...sampleEvent(), image })).toEqual(['imageDescription']);
+    expect(issuesFor({ ...sampleEvent(), image, imageKind: 'illustration' })).toEqual([]);
   });
 
   it('rejects an end time before the start time and a bad URL', () => {

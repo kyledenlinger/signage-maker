@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { FIELD_LIMITS, MAX_HIGHLIGHTS, MAX_LOGOS } from '../config/limits';
 import { useFormats } from '../lib/formatStore';
-import { readImageFile } from '../lib/image';
+import { guessImageKind, readImageFile } from '../lib/image';
 import { CustomSizes } from './CustomSizes';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
@@ -85,33 +85,16 @@ export function EventForm() {
         <CheckboxField name="showQr" label="Show a QR code for the web address" />
       </Section>
 
-      <Section title="Images">
-        <ImageField
-          name="image"
-          label="Photo"
-          accept="image/jpeg,image/png,image/webp"
-          hint="JPG, PNG or WebP. At least 1920 px on the long edge is best."
-          checkResolution
-        />
-        <Focus image="image" name="imageFocus" what="photo" />
-        <TextField
-          name="imageDescription"
-          label="Photo description"
-          limit={FIELD_LIMITS.imageDescription}
-          hint="Required with a photo. Used for alt text; not printed on the sign."
-        />
-        <TextField name="imageCredit" label="Photo credit" limit={FIELD_LIMITS.imageCredit} />
-        <ImageField
-          name="illustration"
-          label="Illustration"
-          accept="image/png,image/svg+xml"
-          hint="Transparent PNG or SVG. Placed only where it never touches text; treated as decorative."
-        />
+      <Section title="Photo or illustration">
+        <FeaturedImage />
+      </Section>
+
+      <Section title="Background image">
         <ImageField
           name="background"
           label="Background image"
           accept="image/jpeg,image/png,image/webp"
-          hint="Fills the sign behind solid text panels, in Showcase and Type only. Treated as decorative."
+          hint="Fills the whole sign behind solid text panels, in Showcase and Type only. Decorative."
           checkResolution
         />
         <Focus image="background" name="backgroundFocus" what="background image" />
@@ -311,4 +294,72 @@ function Focus({ image, name, what }: { image: 'image' | 'background'; name: 'im
   const { control } = useFormContext<EventData>();
   const asset = useWatch({ control, name: image });
   return asset ? <FocalPointPicker image={asset} name={name} what={what} /> : null;
+}
+
+/** One featured image, shown as a photo (cropped to fill) or an illustration (shown whole). */
+function FeaturedImage() {
+  const { control, register, setValue } = useFormContext<EventData>();
+  const [image, kind] = useWatch({ control, name: ['image', 'imageKind'] });
+  const id = fieldId('imageKind');
+  const kinds = [
+    { value: 'photo', label: 'Photo', hint: 'Fills its space, cropped around a focal point you choose.' },
+    { value: 'illustration', label: 'Illustration', hint: 'Shown whole, never cropped. Good for transparent PNGs and SVGs.' },
+  ];
+  return (
+    <>
+      <ImageField
+        name="image"
+        label="Photo or illustration"
+        accept="image/jpeg,image/png,image/webp,image/svg+xml"
+        hint="One image per sign, beside or above the text (never under it). Used by every template except Type only. JPG, PNG, WebP or SVG; photos look best at 1920 px or more."
+        checkResolution
+        onLoaded={(asset) => {
+          void guessImageKind(asset).then((guess) =>
+            setValue('imageKind', guess, { shouldDirty: true, shouldValidate: true }),
+          );
+        }}
+      />
+      {image && (
+        <fieldset className="field fieldset" id={id} tabIndex={-1}>
+          <legend>Show it as</legend>
+          {kinds.map((k) => (
+            <div className="field--check" key={k.value}>
+              <input
+                id={`${id}-${k.value}`}
+                type="radio"
+                value={k.value}
+                {...register('imageKind')}
+                aria-describedby={`${id}-${k.value}-hint`}
+              />
+              <label htmlFor={`${id}-${k.value}`}>{k.label}</label>
+              <p className="hint" id={`${id}-${k.value}-hint`}>
+                {k.hint}
+              </p>
+            </div>
+          ))}
+        </fieldset>
+      )}
+      {kind === 'photo' && <Focus image="image" name="imageFocus" what="photo" />}
+      {image && (
+        <>
+          <TextField
+            name="imageDescription"
+            label="Image description"
+            limit={FIELD_LIMITS.imageDescription}
+            hint={
+              kind === 'photo'
+                ? 'Required for photos. Used for alt text; not printed on the sign.'
+                : 'Optional for illustrations, which are decorative. Used for alt text if given.'
+            }
+          />
+          <TextField
+            name="imageCredit"
+            label="Image credit"
+            limit={FIELD_LIMITS.imageCredit}
+            hint="Printed small on the sign."
+          />
+        </>
+      )}
+    </>
+  );
 }
