@@ -17,6 +17,7 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     location: '',
     description: '',
     highlights: [],
+    highlightStyle: 'bold-color',
     callToAction: '',
     url: '',
     displayUrl: '',

@@ -114,6 +114,15 @@
 .t-highlights li:not(:last-child)::after {
   content: ' ·';
 }
+/* Highlights stand out from the other details: bold, the theme's highlight color, or both. */
+.t-highlights--bold-color,
+.t-highlights--bold {
+  font-weight: 700;
+}
+.t-highlights--bold-color,
+.t-highlights--color {
+  color: var(--c-highlight);
+}
 .t-cta {
   font-weight: 700;
 }

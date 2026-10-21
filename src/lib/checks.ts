@@ -72,6 +72,7 @@ export function themeContrastIssues(theme: Theme): Issue[] {
     [theme.title, CONTRAST_MIN.text],
     [theme.text, CONTRAST_MIN.text],
     [theme.emphasis, CONTRAST_MIN.text],
+    [theme.highlight, CONTRAST_MIN.text],
     [theme.textMuted, CONTRAST_MIN.smallPrint],
   ];
   for (const [color, min] of pairs) {

@@ -75,7 +75,11 @@ export function Details({ content, className = '' }: { content: SignContent; cla
             </div>
           )}
           {content.highlights.length > 0 && (
-            <ul className="t-body t-highlights" data-slot="body" data-field="highlights">
+            <ul
+              className={`t-body t-highlights t-highlights--${content.highlightStyle}`}
+              data-slot="body"
+              data-field="highlights"
+            >
               {content.highlights.map((h, i) => (
                 <li key={i}>{h}</li>
               ))}

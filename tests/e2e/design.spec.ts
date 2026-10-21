@@ -100,3 +100,27 @@ test('background and image colors survive a reload', async ({ page }) => {
   await expect(card(page, 'landscape-hd').locator('.t-backdrop img')).toBeVisible();
   await expect(card(page, 'landscape-hd').locator('.tpl')).toHaveCSS('background-color', before);
 });
+
+test('highlights stand out: bold and color by default, or either alone', async ({ page }) => {
+  const list = card(page, 'landscape-hd').locator('.t-highlights');
+  const tagline = card(page, 'landscape-hd').locator('[data-field="subtitle"]');
+  const style = (loc: typeof list) =>
+    loc.evaluate((el) => ({ weight: getComputedStyle(el).fontWeight, color: getComputedStyle(el).color }));
+
+  // Black and gold: highlights in Athletics Gold, bold; the tagline stays white, regular.
+  expect(await style(list)).toEqual({ weight: '700', color: 'rgb(206, 184, 136)' });
+  expect(await style(tagline)).toEqual({ weight: '400', color: 'rgb(255, 255, 255)' });
+
+  await page.getByLabel('Highlights style').selectOption('bold');
+  await expect(list).toHaveCSS('color', 'rgb(255, 255, 255)');
+  await expect(list).toHaveCSS('font-weight', '700');
+
+  await page.getByLabel('Highlights style').selectOption('color');
+  await expect(list).toHaveCSS('color', 'rgb(206, 184, 136)');
+  await expect(list).toHaveCSS('font-weight', '400');
+
+  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+    await expect(card(page, id)).toHaveAttribute('data-fits', 'true');
+  }
+  expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+});

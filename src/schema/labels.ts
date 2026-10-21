@@ -12,6 +12,7 @@ export const FIELD_LABELS: Record<keyof EventData, string> = {
   location: 'Location',
   description: 'Description',
   highlights: 'Highlights',
+  highlightStyle: 'Highlights style',
   callToAction: 'Call to action',
   url: 'Web address',
   displayUrl: 'Display URL',

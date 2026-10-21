@@ -6,7 +6,7 @@ import { THEMES } from './themes';
 describe.each(THEMES)('theme $name', (theme) => {
   const surfaces = { background: theme.background, panel: theme.panel };
 
-  it.each(['title', 'text', 'emphasis'] as const)('%s text meets 4.5:1 on every surface', (role) => {
+  it.each(['title', 'text', 'emphasis', 'highlight'] as const)('%s text meets 4.5:1 on every surface', (role) => {
     for (const [surface, color] of Object.entries(surfaces)) {
       const ratio = contrastRatio(theme[role], color);
       expect(ratio, `${role} on ${surface}`).toBeGreaterThanOrEqual(CONTRAST_MIN.text);

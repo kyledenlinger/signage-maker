@@ -183,6 +183,16 @@ function HighlightsField() {
           Add a highlight
         </button>
       )}
+      <SelectField
+        name="highlightStyle"
+        label="Highlights style"
+        hint="How highlights stand out from the other details."
+        options={[
+          { value: 'bold-color', label: 'Bold and color' },
+          { value: 'bold', label: 'Bold' },
+          { value: 'color', label: 'Color' },
+        ]}
+      />
     </fieldset>
   );
 }

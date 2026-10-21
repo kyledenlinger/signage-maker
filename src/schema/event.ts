@@ -46,6 +46,8 @@ export const eventSchema = z
     highlights: z
       .array(z.object({ value: text(FIELD_LIMITS.highlight) }))
       .max(MAX_HIGHLIGHTS, `Use up to ${MAX_HIGHLIGHTS} highlights.`),
+    /** How highlights stand out from the other details. */
+    highlightStyle: z.enum(['bold-color', 'bold', 'color']),
     callToAction: text(FIELD_LIMITS.callToAction),
     url: z
       .string()
@@ -113,6 +115,7 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'location',
   'description',
   'highlights',
+  'highlightStyle',
   'callToAction',
   'url',
   'displayUrl',

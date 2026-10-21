@@ -53,6 +53,7 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
   }
   if (!['auto', 'inline', 'stacked'].includes(out.dateStyle as string)) out.dateStyle = blank.dateStyle;
   if (!['short', 'long', 'none'].includes(out.weekdayStyle as string)) out.weekdayStyle = blank.weekdayStyle;
+  if (!['bold-color', 'bold', 'color'].includes(out.highlightStyle as string)) out.highlightStyle = blank.highlightStyle;
   out.image = image(raw.image);
   out.illustration = image(raw.illustration);
   out.background = image(raw.background);
@@ -106,6 +107,7 @@ export function duplicateEvent(event: EventData): EventData {
     accommodations: event.accommodations,
     dateStyle: event.dateStyle,
     weekdayStyle: event.weekdayStyle,
+    highlightStyle: event.highlightStyle,
     showQr: event.showQr,
     // The background and the colors drawn from it are part of a series' look.
     background: event.background,

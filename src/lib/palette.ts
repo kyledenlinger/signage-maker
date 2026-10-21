@@ -137,6 +137,7 @@ export function buildTheme(swatches: Swatch[]): ThemeColors {
     textMuted: text,
     title,
     emphasis,
+    highlight: title,
     accent: title,
     accentText,
     rule: title,

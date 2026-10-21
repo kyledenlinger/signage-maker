@@ -15,6 +15,7 @@ export interface SignContent {
   time: string;
   location: string;
   highlights: string[];
+  highlightStyle: EventData['highlightStyle'];
   description: string;
   callToAction: string;
   url: string;
@@ -56,6 +57,7 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
     time: formatTimeRange(event.startTime, event.endTime),
     location: event.location.trim(),
     highlights: uses('highlights') ? event.highlights.map((h) => h.value.trim()).filter(Boolean) : [],
+    highlightStyle: event.highlightStyle,
     description: uses('description') && manifest.showsDescription[orientation] ? event.description.trim() : '',
     callToAction: uses('callToAction') ? event.callToAction.trim() : '',
     url: uses('url') ? event.displayUrl.trim() || (event.url.trim() ? cleanUrl(event.url) : '') : '',

@@ -2,7 +2,7 @@
  * Theme tokens. Colors from the WFU web palette (brand.wfu.edu).
  *
  * Text roles and the backgrounds they may sit on:
- * - title, text, emphasis: on background and panel (>= 4.5:1)
+ * - title, text, emphasis, highlight: on background and panel (>= 4.5:1)
  * - textMuted (small print: credit, accommodations): on background and panel (>= 7:1)
  * - accentText: on accent fills (>= 4.5:1)
  * - qrDark on qrTile: the QR code itself
@@ -19,6 +19,8 @@ export interface Theme {
   title: string;
   /** Time and location. Large text only. */
   emphasis: string;
+  /** Highlights (Games · Pizza · …), when shown in color. Body size, so >= 4.5:1. */
+  highlight: string;
   accent: string;
   accentText: string;
   rule: string;
@@ -53,6 +55,7 @@ export const THEMES: Theme[] = [
     textMuted: WFU.white,
     title: WFU.athleticsGold,
     emphasis: WFU.oldGold,
+    highlight: WFU.athleticsGold,
     accent: WFU.athleticsGold,
     accentText: WFU.black,
     rule: WFU.oldGold,
@@ -72,6 +75,7 @@ export const THEMES: Theme[] = [
     textMuted: WFU.black,
     title: WFU.black,
     emphasis: WFU.black,
+    highlight: WFU.black,
     accent: WFU.black,
     accentText: WFU.athleticsGold,
     rule: WFU.black,
@@ -91,6 +95,7 @@ export const THEMES: Theme[] = [
     textMuted: WFU.webTextBlack,
     title: WFU.webTextBlack,
     emphasis: WFU.webTextGold,
+    highlight: WFU.webTextGold,
     accent: WFU.oldGold,
     accentText: WFU.black,
     rule: WFU.oldGold,
@@ -110,6 +115,7 @@ export const THEMES: Theme[] = [
     textMuted: WFU.white,
     title: WFU.white,
     emphasis: WFU.yellow,
+    highlight: WFU.yellow,
     accent: WFU.yellow,
     accentText: WFU.black,
     rule: WFU.yellow,
@@ -139,6 +145,7 @@ export const THEME_COLOR_KEYS = [
   'textMuted',
   'title',
   'emphasis',
+  'highlight',
   'accent',
   'accentText',
   'rule',

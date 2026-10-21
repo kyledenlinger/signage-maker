@@ -9,6 +9,7 @@ export const COMMON_FIELDS: (keyof EventData)[] = [
   'endTime',
   'description',
   'highlights',
+  'highlightStyle',
   'callToAction',
   'url',
   'displayUrl',

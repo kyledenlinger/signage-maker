@@ -40,6 +40,7 @@ export function templateVars(
     '--c-muted': theme.textMuted,
     '--c-title': theme.title,
     '--c-emphasis': theme.emphasis,
+    '--c-highlight': theme.highlight,
     '--c-accent': theme.accent,
     '--c-accent-text': theme.accentText,
     '--c-rule': theme.rule,
