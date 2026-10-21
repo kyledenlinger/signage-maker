@@ -1,0 +1,35 @@
+{
+  "name": "signage-maker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p . && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "typecheck": "tsc -p ."
+  },
+  "dependencies": {
+    "@hookform/resolvers": "^3.9.1",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@fontsource/atkinson-hyperlegible": "^5.1.0",
+    "@playwright/test": "^1.56.1",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.7.0",
+    "playwright-core": "^1.56.1",
+    "typescript": "^5.6.3",
+    "vite": "^6.4.1",
+    "vitest": "^3.2.4"
+  }
+}
