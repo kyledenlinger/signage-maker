@@ -7,6 +7,7 @@ import { CustomSizes } from './CustomSizes';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { FocalPointPicker } from './FocalPointPicker';
+import { FontFields } from './FontFields';
 import { ThemeField } from './ThemeField';
 import { CheckboxField, errorAt, fieldId, ImageField, Section, SelectField, TextField } from './fields';
 
@@ -131,6 +132,7 @@ export function EventForm() {
           options={TEMPLATES.map((t) => ({ value: t.manifest.id, label: t.manifest.name }))}
         />
         <ThemeField />
+        <FontFields />
         <FormatsField />
       </Section>
     </div>

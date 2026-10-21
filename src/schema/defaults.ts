@@ -1,3 +1,4 @@
+import { DEFAULT_FONT_ID } from '../config/fonts';
 import { DEFAULT_FORMAT_IDS } from '../config/formats';
 import { DEFAULT_ACCOMMODATIONS } from '../config/limits';
 import { DEFAULT_THEME_ID } from '../config/themes';
@@ -35,6 +36,8 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     accommodations: DEFAULT_ACCOMMODATIONS,
     templateId: DEFAULT_TEMPLATE_ID,
     themeId: DEFAULT_THEME_ID,
+    fontTitle: DEFAULT_FONT_ID,
+    fontBody: DEFAULT_FONT_ID,
     imageTheme: null,
     formatIds,
   };

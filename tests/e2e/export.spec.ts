@@ -113,9 +113,9 @@ async function rowProfileDiff(page: Page, a: string, b: string): Promise<number>
   );
 }
 
-async function previewShot(page: Page, override = '') {
+async function previewShot(page: Page, override = '', fonts = '') {
   await page.setViewportSize({ width: 2000, height: 1200 });
-  await page.goto('/gallery.html?template=showcase&format=landscape-hd&theme=black-gold&image=0&qr=1&fixture=sample&scale=1');
+  await page.goto(`/gallery.html?template=showcase&format=landscape-hd&theme=black-gold&image=0&qr=1&fixture=sample&scale=1${fonts}`);
   await page.evaluate(() => document.fonts.ready);
   if (override) await page.addStyleTag({ content: override });
   await expect(page.locator('[data-cell]')).toHaveAttribute('data-fits', 'true');
@@ -132,6 +132,19 @@ test('the export uses the same fonts and layout as the preview', async ({ page }
     const fallback = await previewShot(page, `.tpl, .tpl * { font-family: ${font} !important; }`);
     expect(await rowProfileDiff(page, exported, fallback), font).toBeGreaterThan(0.08);
   }
+});
+
+test('chosen title and body fonts are embedded in the export', async ({ page }) => {
+  await page.getByLabel('Title font').selectOption('source-serif');
+  await page.getByLabel('Body font').selectOption('lexend');
+  await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveCSS('font-family', /Source Serif 4/);
+  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const exported = (await bytes(file)).toString('base64');
+
+  const fonts = '&fontTitle=source-serif&fontBody=lexend';
+  expect(await rowProfileDiff(page, exported, await previewShot(page, '', fonts))).toBeLessThan(0.04);
+  // Control: the default fonts look clearly different.
+  expect(await rowProfileDiff(page, exported, await previewShot(page))).toBeGreaterThan(0.08);
 });
 
 test('download all: zip holds each format, event.json and alt-text.txt', async ({ page }) => {

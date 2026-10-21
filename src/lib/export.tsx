@@ -6,10 +6,11 @@ import { createRoot } from 'react-dom/client';
 import type { FileType, FormatPreset } from '../config/formats';
 import { resolveTheme } from '../config/themes';
 import type { EventData } from '../schema/event';
-import { fontEmbedCss } from './fontEmbed';
+import { DEFAULT_FONT_ID } from '../config/fonts';
+import { fontEmbedCss, loadFonts } from './fontEmbed';
 
 export function prefetchFonts() {
-  void fontEmbedCss().catch(() => undefined);
+  void fontEmbedCss([DEFAULT_FONT_ID]).catch(() => undefined);
 }
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
 
@@ -44,8 +45,10 @@ export async function renderFormat(event: EventData, format: FormatPreset): Prom
   const root = createRoot(stage);
   let report: FitReport | null = null;
   const theme = resolveTheme(event);
+  const fontIds = [event.fontTitle, event.fontBody];
 
   try {
+    await loadFonts(fontIds);
     flushSync(() =>
       root.render(
         <TemplateRenderer
@@ -72,7 +75,7 @@ export async function renderFormat(event: EventData, format: FormatPreset): Prom
       pixelRatio: 1,
       skipAutoScale: true,
       backgroundColor: theme.background,
-      fontEmbedCSS: await fontEmbedCss(),
+      fontEmbedCSS: await fontEmbedCss(fontIds),
     });
     if (!report) throw new Error('The sign did not finish laying out.');
     return { canvas, report };

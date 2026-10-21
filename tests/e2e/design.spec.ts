@@ -124,3 +124,20 @@ test('highlights stand out: bold and color by default, or either alone', async (
   }
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 });
+
+test('title and body fonts can be chosen separately, and are remembered', async ({ page }) => {
+  await page.getByLabel('Title font').selectOption('source-serif');
+  await page.getByLabel('Body font').selectOption('lexend');
+  const sign = card(page, 'landscape-hd');
+  await expect(sign.locator('[data-slot="title"]')).toHaveCSS('font-family', /Source Serif 4/);
+  await expect(sign.locator('[data-field="subtitle"]')).toHaveCSS('font-family', /Lexend/);
+  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+    await expect(card(page, id)).toHaveAttribute('data-fits', 'true');
+  }
+  expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+
+  await page.waitForTimeout(400);
+  await page.reload();
+  await expect(page.getByLabel('Title font')).toHaveValue('source-serif');
+  await expect(card(page, 'landscape-hd').locator('[data-slot="title"]')).toHaveCSS('font-family', /Source Serif 4/);
+});

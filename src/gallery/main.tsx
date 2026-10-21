@@ -13,7 +13,8 @@ import '../styles/fonts.css';
  * Development-only page used by the Playwright tests and for eyeballing layouts.
  *   ?template=split&format=landscape-hd&theme=black-gold&image=1&qr=1&fixture=sample&scale=0.4 (or scale=auto)
  *   ?matrix=1&theme=light   (every template × orientation × image × QR)
- *   Add bg=1 for a background image; theme=from-images builds the theme from the images.
+ *   Add bg=1 for a background image; theme=from-images builds the theme from the images;
+ *   fontTitle=lexend&fontBody=inter picks fonts (ids from config/fonts.ts).
  */
 
 const params = new URLSearchParams(location.search);
@@ -33,7 +34,16 @@ function Cell({ templateId, formatId, themeId, image, qr, fixture, scale, backgr
   const format = findFormat(formatId)!;
   const factor = scale === 'auto' ? 480 / Math.max(format.width, format.height) : scale;
   const base = useMemo(
-    () => fixtureEvent(fixture, { image, qr, templateId, themeId, background }),
+    () =>
+      fixtureEvent(fixture, {
+        image,
+        qr,
+        templateId,
+        themeId,
+        background,
+        fontTitle: params.get('fontTitle') ?? undefined,
+        fontBody: params.get('fontBody') ?? undefined,
+      }),
     [fixture, image, qr, templateId, themeId, background],
   );
   const [event, setEvent] = useState<EventData | null>(themeId === IMAGE_THEME_ID ? null : base);

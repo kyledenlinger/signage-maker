@@ -1,3 +1,4 @@
+import { FONT_FAMILIES } from '../config/fonts';
 import type { FormatPreset } from '../config/formats';
 import { blankEvent } from '../schema/defaults';
 import { imageAssetSchema, themeColorsSchema, type EventData, type ImageAsset } from '../schema/event';
@@ -54,6 +55,9 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
   if (!['auto', 'inline', 'stacked'].includes(out.dateStyle as string)) out.dateStyle = blank.dateStyle;
   if (!['short', 'long', 'none'].includes(out.weekdayStyle as string)) out.weekdayStyle = blank.weekdayStyle;
   if (!['bold-color', 'bold', 'color'].includes(out.highlightStyle as string)) out.highlightStyle = blank.highlightStyle;
+  for (const key of ['fontTitle', 'fontBody'] as const) {
+    if (!FONT_FAMILIES.some((f) => f.id === out[key])) out[key] = blank[key];
+  }
   out.image = image(raw.image);
   out.illustration = image(raw.illustration);
   out.background = image(raw.background);
@@ -101,6 +105,8 @@ export function duplicateEvent(event: EventData): EventData {
     ...blankEvent(event.formatIds),
     templateId: event.templateId,
     themeId: event.themeId,
+    fontTitle: event.fontTitle,
+    fontBody: event.fontBody,
     showLockup: event.showLockup,
     logos: event.logos,
     showAccommodations: event.showAccommodations,

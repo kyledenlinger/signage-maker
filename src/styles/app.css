@@ -589,3 +589,8 @@ button {
 .fieldset .button-secondary + .field {
   margin-top: 0.75rem;
 }
+.font-sample {
+  margin: 0.4rem 0 0;
+  font-size: 1.15rem;
+  line-height: 1.3;
+}

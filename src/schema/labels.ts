@@ -30,6 +30,8 @@ export const FIELD_LABELS: Record<keyof EventData, string> = {
   accommodations: 'Accommodations line',
   templateId: 'Template',
   themeId: 'Theme',
+  fontTitle: 'Title font',
+  fontBody: 'Body font',
   imageTheme: 'Image colors',
   formatIds: 'Formats',
 };

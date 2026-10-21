@@ -29,10 +29,13 @@ async function layoutProblems(page: Page): Promise<string[]> {
       r.left >= box.left - TOL && r.top >= box.top - TOL && r.right <= box.right + TOL && r.bottom <= box.bottom + TOL;
     const overlaps = (a: DOMRect, b: DOMRect) =>
       a.left < b.right - TOL && a.right > b.left + TOL && a.top < b.bottom - TOL && a.bottom > b.top + TOL;
+    // Text width from the text; height from the line boxes (as TemplateRenderer measures).
     const textRect = (el: Element) => {
       const range = document.createRange();
       range.selectNodeContents(el);
-      return range.getBoundingClientRect();
+      const text = range.getBoundingClientRect();
+      const box = el.getBoundingClientRect();
+      return new DOMRect(text.left, box.top, text.width, box.height);
     };
 
     for (const cell of Array.from(document.querySelectorAll('[data-cell]'))) {
@@ -152,6 +155,22 @@ test('the Match my images theme renders every template and fits', async ({ page 
   const bg = await page.locator('[data-cell] .tpl').first().evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(bg).not.toBe('rgb(0, 0, 0)');
 });
+
+for (const font of ['lexend', 'public-sans', 'source-sans', 'inter', 'source-serif']) {
+  test(`every template fits the sample event in ${font}`, async ({ page }) => {
+    await openMatrix(page, 'black-gold', 'sample', `&fontTitle=${font}&fontBody=${font === 'source-serif' ? 'atkinson' : font}`);
+    const family = await page
+      .locator('[data-cell] [data-slot="title"]')
+      .first()
+      .evaluate((el) => getComputedStyle(el).fontFamily);
+    expect(family).not.toContain('Atkinson');
+    const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
+      els.map((e) => e.getAttribute('data-cell')),
+    );
+    expect(notFitting).toEqual([]);
+    expect(await layoutProblems(page)).toEqual([]);
+  });
+}
 
 test('rendered sizes keep the hierarchy and the floors', async ({ page }) => {
   await openMatrix(page, 'light', 'sample');

@@ -42,7 +42,15 @@ export type FixtureName = 'sample' | 'short' | 'long';
 
 export function fixtureEvent(
   name: FixtureName,
-  opts: { image: boolean; qr: boolean; templateId: string; themeId: string; background?: boolean },
+  opts: {
+    image: boolean;
+    qr: boolean;
+    templateId: string;
+    themeId: string;
+    background?: boolean;
+    fontTitle?: string;
+    fontBody?: string;
+  },
 ): EventData {
   const base = sampleEvent();
   const event: EventData = {
@@ -54,6 +62,8 @@ export function fixtureEvent(
     imageDescription: opts.image ? 'Abstract shapes on a blue-to-orange gradient' : '',
     imageCredit: opts.image ? 'Photo: ZSR Library' : '',
     background: opts.background ? fixtureBackground() : null,
+    fontTitle: opts.fontTitle ?? base.fontTitle,
+    fontBody: opts.fontBody ?? base.fontBody,
   };
   if (name === 'short') {
     event.subtitle = '';

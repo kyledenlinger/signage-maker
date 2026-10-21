@@ -72,6 +72,9 @@ export const eventSchema = z
     accommodations: text(FIELD_LIMITS.accommodations),
     templateId: z.string().min(1, 'Choose a template.'),
     themeId: z.string().min(1, 'Choose a theme.'),
+    /** Font ids from config/fonts.ts. */
+    fontTitle: z.string(),
+    fontBody: z.string(),
     /** Colors for the "Match my images" theme, built from the event's images. */
     imageTheme: themeColorsSchema.nullable(),
     formatIds: z.array(z.string()).min(1, 'Choose at least one format.'),
@@ -133,6 +136,8 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'accommodations',
   'templateId',
   'themeId',
+  'fontTitle',
+  'fontBody',
   'imageTheme',
   'formatIds',
 ];

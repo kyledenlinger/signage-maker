@@ -1,3 +1,5 @@
+import { DEFAULT_FONT_ID, fontStack } from './fonts';
+
 /**
  * Theme tokens. Colors from the WFU web palette (brand.wfu.edu).
  *
@@ -33,7 +35,8 @@ export interface Theme {
   fontBody: string;
 }
 
-export const FONT_STACK = '"Atkinson Hyperlegible", sans-serif';
+/** Built-in themes use the default font; people pick title and body fonts separately. */
+export const FONT_STACK = fontStack(DEFAULT_FONT_ID);
 
 const WFU = {
   black: '#000000',
@@ -158,18 +161,39 @@ export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
 /** The colors of a generated theme; stored with the event so every render and export matches. */
 export type ThemeColors = Pick<Theme, ThemeColorKey | 'logoVariant'>;
 
-/** One theme object per set of image colors, so renders that depend on the theme stay stable. */
-const imageThemes = new WeakMap<ThemeColors, Theme>();
+interface ThemeChoice {
+  themeId: string;
+  imageTheme: ThemeColors | null;
+  fontTitle?: string;
+  fontBody?: string;
+}
 
-/** The theme an event renders with. "Match my images" falls back to the default until colors exist. */
-export function resolveTheme(event: { themeId: string; imageTheme: ThemeColors | null }): Theme {
-  if (event.themeId !== IMAGE_THEME_ID) return findTheme(event.themeId);
-  const colors = event.imageTheme;
-  if (!colors) return findTheme(DEFAULT_THEME_ID);
-  let theme = imageThemes.get(colors);
+/** One theme object per theme, color set and font pair, so renders that depend on it stay stable. */
+const staticThemes = new Map<string, Theme>();
+const imageThemes = new WeakMap<ThemeColors, Map<string, Theme>>();
+
+/**
+ * The theme an event renders with: its colors (a built-in theme, or "Match my images", which falls
+ * back to the default until colors exist) and its chosen title and body fonts.
+ */
+export function resolveTheme(event: ThemeChoice): Theme {
+  const fonts = { fontDisplay: fontStack(event.fontTitle ?? DEFAULT_FONT_ID), fontBody: fontStack(event.fontBody ?? DEFAULT_FONT_ID) };
+  const fontKey = `${fonts.fontDisplay}|${fonts.fontBody}`;
+  const colors = event.themeId === IMAGE_THEME_ID ? event.imageTheme : null;
+
+  if (!colors) {
+    const base = findTheme(event.themeId === IMAGE_THEME_ID ? DEFAULT_THEME_ID : event.themeId);
+    const key = `${base.id}|${fontKey}`;
+    let theme = staticThemes.get(key);
+    if (!theme) staticThemes.set(key, (theme = { ...base, ...fonts }));
+    return theme;
+  }
+  let byFont = imageThemes.get(colors);
+  if (!byFont) imageThemes.set(colors, (byFont = new Map()));
+  let theme = byFont.get(fontKey);
   if (!theme) {
-    theme = { ...findTheme(DEFAULT_THEME_ID), ...colors, id: IMAGE_THEME_ID, name: IMAGE_THEME_NAME };
-    imageThemes.set(colors, theme);
+    theme = { ...findTheme(DEFAULT_THEME_ID), ...colors, ...fonts, id: IMAGE_THEME_ID, name: IMAGE_THEME_NAME };
+    byFont.set(fontKey, theme);
   }
   return theme;
 }

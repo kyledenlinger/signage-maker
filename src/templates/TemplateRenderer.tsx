@@ -31,12 +31,18 @@ interface Props {
 
 const CONTENT = '[data-slot], .t-qr-tile, .t-logos';
 
-/** The box text actually occupies (a block's own box can be wider than its text). */
+/**
+ * The box text actually occupies. Horizontally that's the text itself (a block can be wider than its
+ * text). Vertically it's the element's line boxes: a font's glyph area can be taller than the line
+ * height (Source Sans 3 is), and that extra ink doesn't take up layout space.
+ */
 function contentRect(el: Element): DOMRect {
-  if (!el.hasAttribute('data-slot')) return el.getBoundingClientRect();
+  const box = el.getBoundingClientRect();
+  if (!el.hasAttribute('data-slot')) return box;
   const range = document.createRange();
   range.selectNodeContents(el);
-  return range.getBoundingClientRect();
+  const text = range.getBoundingClientRect();
+  return new DOMRect(text.left, box.top, text.width, box.height);
 }
 
 interface Overflow {
@@ -149,14 +155,18 @@ export function TemplateRenderer({ event, theme, format, onFit }: Props) {
 
   useLayoutEffect(run, [run, event, theme]);
 
-  // Fonts and images can change layout after the first pass.
+  // Fonts and images can change layout after the first pass. A newly chosen font loads on first
+  // use, so fit again whenever fonts finish loading.
   useEffect(() => {
     let cancelled = false;
     void document.fonts.ready.then(() => {
       if (!cancelled) run();
     });
+    const onLoaded = () => run();
+    document.fonts.addEventListener('loadingdone', onLoaded);
     return () => {
       cancelled = true;
+      document.fonts.removeEventListener('loadingdone', onLoaded);
     };
   }, [run]);
 
