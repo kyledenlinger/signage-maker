@@ -215,3 +215,38 @@ test('an opaque image is treated as a photo', async ({ page }) => {
   await expect(page.getByRole('radio', { name: 'Photo' })).toBeChecked();
   await expect(page.getByRole('group', { name: 'Photo focal point' })).toBeVisible();
 });
+
+test('ZSR Library logo: Semiformal horizontal by default, colorway matched to the theme', async ({ page }) => {
+  const logo = card(page, 'landscape-hd').locator('.t-zsr-logo');
+  await expect(page.getByLabel('Logo version')).toHaveValue('semiformal-zsr-library');
+  await expect(page.getByLabel('Logo layout')).toHaveValue('horizontal');
+  await expect(page.getByLabel('Logo color')).toHaveValue('auto');
+  await expect(logo).toHaveAttribute('src', /logos\/semiformal-zsr-library\/horizontal-reverse\.png$/);
+  await expect(logo).toHaveJSProperty('complete', true);
+  expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+  for (const [theme, colorway] of [
+    ['athletics-gold', 'black'],
+    ['light', 'color'],
+    ['high-contrast', 'reverse'],
+  ]) {
+    await themeSelect(page).selectOption(theme);
+    await expect(logo).toHaveAttribute('data-colorway', colorway);
+  }
+
+  // A manual pick that's hard to see gets a warning, not a block.
+  await themeSelect(page).selectOption('athletics-gold');
+  await page.getByLabel('Logo color').selectOption('gold');
+  await expect(page.getByRole('region', { name: 'Readability check' })).toContainText(
+    'Logo color · the gold logo is hard to see on this theme · use Automatic (black)',
+  );
+
+  await page.getByLabel('Logo color').selectOption('auto');
+  await page.getByLabel('Logo version').selectOption('formal');
+  await page.getByLabel('Logo layout').selectOption('vertical');
+  await expect(logo).toHaveAttribute('src', /logos\/formal\/vertical-black\.png$/);
+  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+    await expect(card(page, id)).toHaveAttribute('data-fits', 'true');
+  }
+  expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+});

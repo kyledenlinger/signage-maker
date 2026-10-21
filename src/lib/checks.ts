@@ -6,6 +6,7 @@ import { FIELD_LABELS } from '../schema/labels';
 import { signContent, visibleWords } from '../templates/shared/content';
 import { findTemplate, resolveTemplate } from '../templates/registry';
 import type { FitReport } from '../templates/TemplateRenderer';
+import { COLORWAYS, colorwayReadable, pickColorway } from '../config/logos';
 import { contrastRatio } from './contrast';
 import { isVector } from './image';
 import { allFormats, findAnyFormat } from './formatStore';
@@ -156,7 +157,14 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
     }
   }
 
-  out.push(...themeContrastIssues(resolveTheme(event)));
+  const theme = resolveTheme(event);
+  if (event.showLockup && event.lockupColorway !== 'auto' && !colorwayReadable(event.lockupColorway, theme.panel)) {
+    out.push(
+      issue('warning', null, 'lockupColorway', `the ${COLORWAYS[event.lockupColorway].name.toLowerCase()} logo is hard to see on this theme`, `use Automatic (${COLORWAYS[pickColorway(theme.panel)].name.toLowerCase()})`),
+    );
+  }
+
+  out.push(...themeContrastIssues(theme));
   return out;
 }
 

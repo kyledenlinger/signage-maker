@@ -1,5 +1,6 @@
 import { DEFAULT_FONT_ID } from '../config/fonts';
 import { DEFAULT_FORMAT_IDS } from '../config/formats';
+import { DEFAULT_LOCKUP_ID } from '../config/logos';
 import { DEFAULT_ACCOMMODATIONS } from '../config/limits';
 import { DEFAULT_THEME_ID } from '../config/themes';
 import { DEFAULT_TEMPLATE_ID } from '../templates/registry';
@@ -31,6 +32,9 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     background: null,
     backgroundFocus: { x: 0.5, y: 0.5 },
     showLockup: true,
+    lockupId: DEFAULT_LOCKUP_ID,
+    lockupOrientation: 'horizontal',
+    lockupColorway: 'auto',
     logos: [],
     showAccommodations: true,
     accommodations: DEFAULT_ACCOMMODATIONS,

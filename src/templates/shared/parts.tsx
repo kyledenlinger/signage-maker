@@ -2,7 +2,8 @@ import type { FormatPreset } from '../../config/formats';
 import type { Theme } from '../../config/themes';
 import { qrSizePx } from '../../lib/qr';
 import { canvasUnit } from '../../config/formats';
-import { Lockup } from './Lockup';
+import { findLockup, logoUrl, pickColorway } from '../../config/logos';
+import { LAYOUT } from '../../config/layout';
 import { QrCode, qrTotalPx } from './QrCode';
 import type { SignContent } from './content';
 import './base.css';
@@ -110,22 +111,20 @@ export function Footer({
   content,
   theme,
   format,
-  logoHeightU,
   row = false,
   className = '',
 }: {
   content: SignContent;
   theme: Theme;
   format: FormatPreset;
-  logoHeightU: number;
   /** Logos and small print side by side, for short layouts. */
   row?: boolean;
   className?: string;
 }) {
   const hasSmall = Boolean(content.credit || content.accommodations);
-  const hasLogos = content.showLockup || content.logos.length > 0;
+  const hasLogos = Boolean(content.lockup) || content.logos.length > 0;
   if (!hasSmall && !hasLogos) return null;
-  const logoHeight = logoHeightU * canvasUnit(format);
+  const logoHeight = LAYOUT.logoHeightU[content.lockup?.orientation ?? 'horizontal'][format.orientation] * canvasUnit(format);
   return (
     <div className={`t-footer ${row ? 't-footer--row' : ''} ${className}`} data-fit-region>
       <div className="t-card t-footer-body">
@@ -145,9 +144,7 @@ export function Footer({
         )}
         {hasLogos && (
           <div className="t-logos" style={{ height: logoHeight }}>
-            {content.showLockup && (
-              <Lockup height={logoHeight} color={theme.logoVariant === 'light' ? '#FFFFFF' : '#000000'} />
-            )}
+            {content.lockup && <ZsrLogo lockup={content.lockup} theme={theme} />}
             {content.logos.map((logo, i) => (
               <img key={i} src={logo.dataUrl} alt="" />
             ))}
@@ -155,6 +152,22 @@ export function Footer({
         )}
       </div>
     </div>
+  );
+}
+
+/** The approved ZSR Library logo, in the colorway that reads on this theme unless one was picked. */
+function ZsrLogo({ lockup, theme }: { lockup: NonNullable<SignContent['lockup']>; theme: Theme }) {
+  const colorway = lockup.colorway === 'auto' ? pickColorway(theme.panel) : lockup.colorway;
+  const [width, height] = findLockup(lockup.id).size[lockup.orientation];
+  return (
+    <img
+      className="t-zsr-logo"
+      src={logoUrl(lockup.id, lockup.orientation, colorway)}
+      width={width}
+      height={height}
+      alt=""
+      data-colorway={colorway}
+    />
   );
 }
 

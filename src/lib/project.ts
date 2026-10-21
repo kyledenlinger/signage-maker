@@ -1,4 +1,5 @@
 import { FONT_FAMILIES } from '../config/fonts';
+import { LOCKUPS } from '../config/logos';
 import type { FormatPreset } from '../config/formats';
 import { blankEvent } from '../schema/defaults';
 import { imageAssetSchema, imagePalettesSchema, themeColorsSchema, type EventData, type ImageAsset } from '../schema/event';
@@ -55,6 +56,11 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
   if (!['auto', 'inline', 'stacked'].includes(out.dateStyle as string)) out.dateStyle = blank.dateStyle;
   if (!['short', 'long', 'none'].includes(out.weekdayStyle as string)) out.weekdayStyle = blank.weekdayStyle;
   if (!['bold-color', 'bold', 'color'].includes(out.highlightStyle as string)) out.highlightStyle = blank.highlightStyle;
+  if (!LOCKUPS.some((l) => l.id === out.lockupId)) out.lockupId = blank.lockupId;
+  if (!['horizontal', 'vertical'].includes(out.lockupOrientation as string)) out.lockupOrientation = blank.lockupOrientation;
+  if (!['auto', 'color', 'reverse', 'gold', 'black', 'white'].includes(out.lockupColorway as string)) {
+    out.lockupColorway = blank.lockupColorway;
+  }
   for (const key of ['fontTitle', 'fontBody'] as const) {
     if (!FONT_FAMILIES.some((f) => f.id === out[key])) out[key] = blank[key];
   }
@@ -120,6 +126,9 @@ export function duplicateEvent(event: EventData): EventData {
     fontTitle: event.fontTitle,
     fontBody: event.fontBody,
     showLockup: event.showLockup,
+    lockupId: event.lockupId,
+    lockupOrientation: event.lockupOrientation,
+    lockupColorway: event.lockupColorway,
     logos: event.logos,
     showAccommodations: event.showAccommodations,
     accommodations: event.accommodations,

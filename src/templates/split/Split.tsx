@@ -1,4 +1,3 @@
-import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
 import { Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
@@ -21,7 +20,7 @@ export function Split({ event, theme, format }: TemplateProps) {
         <WhenWhere content={c} className="sp-when" />
         <Details content={c} className="sp-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="sp-qr" />
-        <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o === 'square'} className="sp-footer" />
+        <Footer content={c} theme={theme} format={format} row={o === 'square'} className="sp-footer" />
       </div>
     </div>
   );

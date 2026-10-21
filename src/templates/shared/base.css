@@ -146,13 +146,16 @@
   align-items: flex-end;
   gap: var(--gap);
 }
-/* Small print wraps beside the logos rather than pushing past the edge. */
+/*
+ * Small print and logos share the row. Small print keeps at least 40% of it (so it doesn't wrap into
+ * a tall column); the logos scale down, keeping their proportions, when they'd need more.
+ */
 .t-footer--row .t-small {
   flex: 1 1 0;
-  min-width: 0;
+  min-width: 40%;
 }
 .t-footer--row .t-logos {
-  flex: none;
+  flex: 0 1 auto;
 }
 .t-small {
   font-size: var(--fs-smallPrint);
@@ -163,11 +166,17 @@
   display: flex;
   align-items: center;
   gap: var(--gap);
+  min-width: 0;
+  max-width: 100%;
 }
-.t-logos img,
-.t-logos svg {
+/* Logos are sized by height, never stretched; in a narrow footer they scale down to fit. */
+.t-logos img {
   height: 100%;
   width: auto;
+  min-width: 0;
+  max-width: 100%;
+  object-fit: contain;
+  object-position: left center;
 }
 
 .t-qr-tile {

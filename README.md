@@ -8,10 +8,10 @@ Everything happens in your browser. Nothing you type or upload is sent anywhere.
 
 1. **Fill in the event.** Title, date, start time and location are required; everything else is optional. The date, time and location always appear together on the sign. The weekday is shown short by default ("Fri, Oct 23"); choose *Full* ("Friday") or *None* under **Weekday**. Each text field shows a character count. Going past the recommended count makes a sign harder to read at a glance; going past the limit blocks export until you shorten it.
 2. **Add images (optional).**
-   - **Photo:** used by Showcase, Split, Band and Frame. Add a short description (it becomes the alt text). Click the part of the photo that must stay visible, or use the *Left to right* and *Top to bottom* sliders, and every format crops around that point. Use a photo at least 1920 px wide.
-   - **Illustration:** a transparent PNG or SVG for Showcase. It's placed where it never touches text.
-   - **Background image:** fills the whole sign in Showcase and Type only, with every block of text on a solid panel over it. Like the photo, it has a focal point.
-   - **Logos:** the WF | Wake Forest ZSR lockup is on by default. You can add up to three more (SVG or PNG with a transparent background).
+   - **Photo or illustration:** one featured image, beside or above the text, in Showcase, Split, Band and Frame. Choose how to show it: as a **Photo** (fills its space, cropped around a focal point you set by clicking or with the sliders; needs a short description for alt text) or as an **Illustration** (shown whole, never cropped; description optional). Transparent PNGs and SVGs start out as illustrations. Photos look best at 1920 px or more.
+   - **Background image:** fills the whole sign in Showcase and Type only, with every block of text on a solid panel over it. It has its own focal point.
+   - **ZSR Library logo:** the approved WF | ZSR Library logo is on by default, as *Semiformal: Wake Forest ZSR Library*, horizontal. You can pick any approved version (Formal, Semiformal or Informal; with or without "Library"), horizontal or vertical. Its color (Color, Reverse, Gold, Black or White) is matched to the theme automatically so it stays readable; you can override it, and the panel warns if your pick is hard to see.
+   - **More logos:** add up to three co-sponsor logos (SVG or PNG with a transparent background).
 3. **Choose a design.** Pick a template, a theme and the formats you need. Landscape HD, Portrait HD and Letter poster are selected to start; your choice is remembered.
 4. **Check the previews.** All selected formats update as you type. The **Readability check** panel lists anything to fix, as *format · field · problem · fix*. Click an item to jump to the field. Items marked **Blocks export** must be fixed before that format can download; **Warnings** are advice.
 5. **Download.**
@@ -83,4 +83,4 @@ npm run build      # static site in dist/
 - Preview and export share one render path, `src/templates/TemplateRenderer.tsx`, which also runs text fitting.
 - Visual snapshot baselines are macOS Chromium only; CI skips them.
 - Pushing to `main` runs the tests and deploys `dist/` to GitHub Pages (`.github/workflows/deploy.yml`).
-- The lockup in `src/templates/shared/Lockup.tsx` is a placeholder until the official artwork is supplied.
+- Logos in `public/logos/` are web-sized copies of the library's approved PNGs (trimmed, 400 px tall horizontal, 720 px vertical). `src/config/logos.ts` lists them and picks the colorway by contrast.

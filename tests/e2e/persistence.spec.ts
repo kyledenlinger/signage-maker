@@ -161,7 +161,7 @@ test('custom sizes: validated, previewed, exported at exact size, remembered, re
   await page.getByLabel('Name', { exact: true }).fill('Lobby screen');
   await page.getByLabel('Width (px)').fill('1366');
   await page.getByLabel('Height (px)').fill('768');
-  await expect(page.getByLabel('Layout')).toHaveValue('landscape');
+  await expect(page.getByLabel('Layout', { exact: true })).toHaveValue('landscape');
   await page.getByRole('button', { name: 'Add size' }).click();
   await expect(page.locator('.custom-status')).toHaveText('Added Lobby screen (1366 × 768) and selected it.');
 

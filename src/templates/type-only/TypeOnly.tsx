@@ -1,4 +1,3 @@
-import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
 import { Backdrop, Details, Footer, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
@@ -18,7 +17,7 @@ export function TypeOnly({ event, theme, format }: TemplateProps) {
       <WhenWhere content={c} className="to-when" />
       <Details content={c} className="to-details" />
       <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="to-qr" />
-      <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} className="to-footer" />
+      <Footer content={c} theme={theme} format={format} className="to-footer" />
     </div>
   );
 }

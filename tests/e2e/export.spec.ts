@@ -65,6 +65,29 @@ test('Landscape HD PNG is exactly 1920 × 1080 with the spec file name', async (
   expect(pngSize(await bytes(file))).toEqual({ width: 1920, height: 1080 });
 });
 
+test('the exported PNG includes the logo', async ({ page }) => {
+  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const b64 = (await bytes(file)).toString('base64');
+  // The Reverse logo's gold WF mark sits bottom-left: look for Old Gold pixels there.
+  const goldPixels = await page.evaluate(async (data) => {
+    const img = new Image();
+    img.src = `data:image/png;base64,${data}`;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = img.width;
+    c.height = img.height;
+    const ctx = c.getContext('2d')!;
+    ctx.drawImage(img, 0, 0);
+    const { data: px } = ctx.getImageData(0, 880, 500, 200);
+    let n = 0;
+    for (let i = 0; i < px.length; i += 4) {
+      if (Math.abs(px[i] - 0x9b) < 20 && Math.abs(px[i + 1] - 0x7c) < 20 && Math.abs(px[i + 2] - 0x37) < 20) n++;
+    }
+    return n;
+  }, b64);
+  expect(goldPixels).toBeGreaterThan(500);
+});
+
 test('Portrait HD JPG is exactly 1080 × 1920', async ({ page }) => {
   const file = await download(page, 'Download JPG of Portrait HD', 'portrait-hd');
   expect(file.suggestedFilename()).toBe('halloween-game-night_portrait-hd_1080x1920.jpg');

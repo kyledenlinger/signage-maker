@@ -1,5 +1,4 @@
 import { canvasUnit } from '../../config/formats';
-import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
 import { Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
@@ -24,7 +23,7 @@ export function Frame({ event, theme, format }: TemplateProps) {
         <WhenWhere content={c} className="fr-when" />
         <Details content={c} className="fr-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="fr-qr" />
-        <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o === 'square'} className="fr-footer" />
+        <Footer content={c} theme={theme} format={format} row={o === 'square'} className="fr-footer" />
       </div>
     </div>
   );

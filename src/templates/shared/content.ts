@@ -28,7 +28,8 @@ export interface SignContent {
   backgroundFocus: { x: number; y: number };
   credit: string;
   accommodations: string;
-  showLockup: boolean;
+  /** The ZSR Library logo, or null when it's turned off. */
+  lockup: { id: string; orientation: EventData['lockupOrientation']; colorway: EventData['lockupColorway'] } | null;
   logos: ImageAsset[];
 }
 
@@ -70,7 +71,9 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
     backgroundFocus: event.backgroundFocus,
     credit: image && uses('imageCredit') ? event.imageCredit.trim() : '',
     accommodations: event.showAccommodations ? event.accommodations.trim() : '',
-    showLockup: event.showLockup,
+    lockup: event.showLockup
+      ? { id: event.lockupId, orientation: event.lockupOrientation, colorway: event.lockupColorway }
+      : null,
     logos: uses('logos') ? event.logos : [],
   };
 }

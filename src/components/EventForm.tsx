@@ -8,6 +8,7 @@ import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { FocalPointPicker } from './FocalPointPicker';
 import { FontFields } from './FontFields';
+import { LogoFields } from './LogoFields';
 import { ThemeField } from './ThemeField';
 import { CheckboxField, errorAt, fieldId, ImageField, Section, SelectField, TextField } from './fields';
 
@@ -101,7 +102,7 @@ export function EventForm() {
       </Section>
 
       <Section title="Logos and accessibility line">
-        <CheckboxField name="showLockup" label="Show the WF | Wake Forest ZSR lockup" />
+        <LogoFields />
         <LogosField />
         <CheckboxField name="showAccommodations" label="Show the accommodations line" />
         <TextField name="accommodations" label="Accommodations line" limit={FIELD_LIMITS.accommodations} />

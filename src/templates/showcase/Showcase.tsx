@@ -1,4 +1,3 @@
-import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
 import { Backdrop, Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
@@ -24,7 +23,7 @@ export function Showcase({ event, theme, format }: TemplateProps) {
       <Photo content={c} className="sc-art" />
       <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="sc-qr" />
       <Details content={c} className="sc-details" />
-      <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o === 'square'} className="sc-footer" />
+      <Footer content={c} theme={theme} format={format} row={o === 'square'} className="sc-footer" />
     </div>
   );
 }

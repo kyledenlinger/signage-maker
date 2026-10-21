@@ -1,4 +1,3 @@
-import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
 import { Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
@@ -21,7 +20,7 @@ export function Band({ event, theme, format }: TemplateProps) {
         </div>
         <Details content={c} className="bd-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="bd-qr" />
-        <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o !== 'portrait'} className="bd-footer" />
+        <Footer content={c} theme={theme} format={format} row={o !== 'portrait'} className="bd-footer" />
       </div>
     </div>
   );
