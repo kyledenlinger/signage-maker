@@ -32,6 +32,6 @@ export const FIELD_LABELS: Record<keyof EventData, string> = {
   themeId: 'Theme',
   fontTitle: 'Title font',
   fontBody: 'Body font',
-  imageTheme: 'Image colors',
+  imagePalettes: 'Image colors',
   formatIds: 'Formats',
 };

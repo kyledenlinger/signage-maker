@@ -1,7 +1,7 @@
 import { FONT_FAMILIES } from '../config/fonts';
 import type { FormatPreset } from '../config/formats';
 import { blankEvent } from '../schema/defaults';
-import { imageAssetSchema, themeColorsSchema, type EventData, type ImageAsset } from '../schema/event';
+import { imageAssetSchema, imagePalettesSchema, themeColorsSchema, type EventData, type ImageAsset } from '../schema/event';
 import { slugify } from './format';
 
 export const PROJECT_KIND = 'zsr-signage-project';
@@ -61,8 +61,13 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
   out.image = image(raw.image);
   out.illustration = image(raw.illustration);
   out.background = image(raw.background);
-  const colors = themeColorsSchema.safeParse(raw.imageTheme);
-  out.imageTheme = colors.success ? colors.data : null;
+  const palettes = imagePalettesSchema.safeParse(raw.imagePalettes);
+  out.imagePalettes = palettes.success ? palettes.data : null;
+  // Projects saved before the three image themes used one auto theme; pick its closest match.
+  if (raw.themeId === 'from-images') {
+    const old = themeColorsSchema.safeParse(raw.imageTheme);
+    out.themeId = old.success && old.data.logoVariant === 'dark' ? 'images-light' : 'images-dark';
+  }
   out.logos = Array.isArray(raw.logos) ? raw.logos.map(image).filter((l): l is ImageAsset => l !== null) : [];
   out.highlights = Array.isArray(raw.highlights)
     ? raw.highlights.filter((h) => isRecord(h) && typeof h.value === 'string').map((h) => ({ value: (h as { value: string }).value }))
@@ -118,6 +123,6 @@ export function duplicateEvent(event: EventData): EventData {
     // The background and the colors drawn from it are part of a series' look.
     background: event.background,
     backgroundFocus: event.backgroundFocus,
-    imageTheme: event.background ? event.imageTheme : null,
+    imagePalettes: event.background ? event.imagePalettes : null,
   };
 }

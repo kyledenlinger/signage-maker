@@ -29,6 +29,12 @@ export const themeColorsSchema = z.object({
   logoVariant: z.enum(['light', 'dark']),
 });
 
+export const imagePalettesSchema = z.object({
+  light: themeColorsSchema,
+  dark: themeColorsSchema,
+  contrast: themeColorsSchema,
+});
+
 const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
 
 export const eventSchema = z
@@ -75,8 +81,8 @@ export const eventSchema = z
     /** Font ids from config/fonts.ts. */
     fontTitle: z.string(),
     fontBody: z.string(),
-    /** Colors for the "Match my images" theme, built from the event's images. */
-    imageTheme: themeColorsSchema.nullable(),
+    /** Light, dark and high-contrast colors for the "Match my images" themes, built from the images. */
+    imagePalettes: imagePalettesSchema.nullable(),
     formatIds: z.array(z.string()).min(1, 'Choose at least one format.'),
   })
   .superRefine((e, ctx) => {
@@ -138,6 +144,6 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'themeId',
   'fontTitle',
   'fontBody',
-  'imageTheme',
+  'imagePalettes',
   'formatIds',
 ];

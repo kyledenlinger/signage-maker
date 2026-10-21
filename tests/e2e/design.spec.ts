@@ -65,38 +65,52 @@ test('a background image puts text on solid panels; other templates say they ski
   await expect(card(page, 'portrait-hd').locator('.tpl--backdrop')).toBeVisible();
 });
 
-test('Match my images: unlocked by an image, contrast-safe, and reset when images go', async ({ page }) => {
-  const option = themeSelect(page).locator('option[value="from-images"]');
-  await expect(option).toBeDisabled();
-  await expect(option).toHaveText('Match my images (add an image first)');
+test('Match my images: light, dark and high contrast, unlocked by an image, alongside the WFU themes', async ({ page }) => {
+  const wfu = themeSelect(page).locator('optgroup[label="WFU themes"] option');
+  await expect(wfu).toHaveText(['Black and gold', 'Athletics Gold', 'Light', 'High contrast']);
+  const matches = themeSelect(page).locator('optgroup option');
+  const light = themeSelect(page).locator('option[value="images-light"]');
+  await expect(light).toBeDisabled();
+  await expect(themeSelect(page).locator('optgroup').nth(1)).toHaveAttribute('label', 'Match my images (add an image first)');
 
   await uploadBackground(page);
-  await expect(option).toBeEnabled();
-  await themeSelect(page).selectOption('from-images');
-  await expect(page.getByRole('list', { name: 'Match my images colors' })).toBeVisible();
+  await expect(light).toBeEnabled();
+  await expect(matches).toHaveCount(7);
 
   const root = card(page, 'landscape-hd').locator('.tpl');
-  await expect(root).not.toHaveCSS('background-color', 'rgb(0, 0, 0)');
-  await expect(page.getByRole('region', { name: 'Readability check' })).not.toContainText('Theme');
-  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
-    await expect(card(page, id)).toHaveAttribute('data-fits', 'true');
-  }
+  const colorsOf = async (id: string) => {
+    await themeSelect(page).selectOption(id);
+    await expect(page.getByRole('list', { name: /Match my images: .* colors/ })).toBeVisible();
+    await expect(root).toHaveAttribute('class', /tpl/);
+    await page.waitForTimeout(300);
+    for (const format of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+      await expect(card(page, format)).toHaveAttribute('data-fits', 'true');
+    }
+    await expect(page.getByRole('region', { name: 'Readability check' })).not.toContainText('Theme');
+    return root.evaluate((el) => getComputedStyle(el).backgroundColor);
+  };
+  const lightBg = await colorsOf('images-light');
+  const darkBg = await colorsOf('images-dark');
+  const contrastBg = await colorsOf('images-contrast');
+  expect(new Set([lightBg, darkBg, contrastBg]).size).toBe(3);
+  expect(contrastBg).toBe('rgb(0, 0, 0)');
+  expect(darkBg).not.toBe('rgb(0, 0, 0)');
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 
   await page.getByRole('button', { name: 'Remove background image' }).click();
   await expect(themeSelect(page)).toHaveValue('black-gold');
-  await expect(option).toBeDisabled();
+  await expect(light).toBeDisabled();
 });
 
 test('background and image colors survive a reload', async ({ page }) => {
   await uploadBackground(page);
-  await themeSelect(page).selectOption('from-images');
-  await expect(page.getByRole('list', { name: 'Match my images colors' })).toBeVisible();
+  await themeSelect(page).selectOption('images-dark');
+  await expect(page.getByRole('list', { name: 'Match my images: Dark colors' })).toBeVisible();
   await expect(card(page, 'landscape-hd').locator('.tpl')).not.toHaveCSS('background-color', 'rgb(0, 0, 0)');
   const before = await card(page, 'landscape-hd').locator('.tpl').evaluate((el) => getComputedStyle(el).backgroundColor);
   await page.waitForTimeout(400);
   await page.reload();
-  await expect(themeSelect(page)).toHaveValue('from-images');
+  await expect(themeSelect(page)).toHaveValue('images-dark');
   await expect(card(page, 'landscape-hd').locator('.t-backdrop img')).toBeVisible();
   await expect(card(page, 'landscape-hd').locator('.tpl')).toHaveCSS('background-color', before);
 });

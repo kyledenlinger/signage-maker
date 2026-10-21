@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { findTheme } from '../config/themes';
 import { blankEvent, sampleEvent } from '../schema/defaults';
 import { duplicateEvent, parseProject, parseProjectText, projectJson, toProjectFile } from './project';
 
@@ -52,5 +53,16 @@ describe('duplicateEvent', () => {
     expect(copy).toMatchObject({ title: '', date: '', location: '', highlights: [], image: null, url: '' });
     expect(copy.formatIds).toEqual(event.formatIds);
     expect(Object.keys(copy).sort()).toEqual(Object.keys(blankEvent()).sort());
+  });
+});
+
+describe('older projects', () => {
+  it('map the single "Match my images" theme to its light or dark version', () => {
+    const base = JSON.parse(projectJson(sampleEvent()));
+    const dark = { ...base, event: { ...base.event, themeId: 'from-images', imageTheme: { logoVariant: 'light' } } };
+    const light = { ...base, event: { ...base.event, themeId: 'from-images', imageTheme: { ...findTheme('light'), logoVariant: 'dark' } } };
+    expect(parseProject(dark)).toMatchObject({ ok: true, event: { themeId: 'images-dark' } });
+    const parsed = parseProject(light);
+    expect(parsed.ok && parsed.event.themeId).toBe('images-light');
   });
 });

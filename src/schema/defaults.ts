@@ -38,7 +38,7 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     themeId: DEFAULT_THEME_ID,
     fontTitle: DEFAULT_FONT_ID,
     fontBody: DEFAULT_FONT_ID,
-    imageTheme: null,
+    imagePalettes: null,
     formatIds,
   };
 }

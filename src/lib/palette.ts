@@ -1,5 +1,5 @@
 import { CONTRAST_MIN } from '../config/limits';
-import type { ThemeColors } from '../config/themes';
+import type { ImagePalettes, ImageThemeMode, ThemeColors } from '../config/themes';
 import type { ImageAsset } from '../schema/event';
 import { contrastRatio, parseHex, relativeLuminance } from './contrast';
 
@@ -22,8 +22,6 @@ export interface Swatch {
 const MARGIN = 0.3;
 const WHITE = '#FFFFFF';
 const NEAR_BLACK = '#111111';
-/** Images average below this relative luminance get a dark theme. */
-const DARK_THRESHOLD = 0.3;
 /** Swatches less saturated than this count as gray: no accent color from them. */
 const MIN_ACCENT_SATURATION = 0.25;
 const SAMPLE_EDGE = 64;
@@ -106,18 +104,22 @@ function hueDistance(a: number, b: number) {
   return d > 180 ? 360 - d : d;
 }
 
-/** A complete, contrast-safe set of theme colors from image swatches. */
-export function buildTheme(swatches: Swatch[]): ThemeColors {
-  const meanLuminance = swatches.reduce((sum, s) => sum + relativeLuminance(s.hex) * s.weight, 0);
-  const dark = meanLuminance < DARK_THRESHOLD;
+/**
+ * A complete, contrast-safe set of theme colors from image swatches.
+ * - light: a pale tint of the dominant color, near-black text
+ * - dark: a deep shade of the dominant color, white text
+ * - contrast: black background, white text, and accents held to 7:1 like all the text
+ */
+export function buildTheme(swatches: Swatch[], mode: ImageThemeMode): ThemeColors {
+  const dark = mode !== 'light';
   const text = dark ? WHITE : NEAR_BLACK;
   const smallPrintMin = CONTRAST_MIN.smallPrint + MARGIN;
-  const textMin = CONTRAST_MIN.text + MARGIN;
+  const colorMin = (mode === 'contrast' ? CONTRAST_MIN.smallPrint : CONTRAST_MIN.text) + MARGIN;
 
   // Background: the dominant color, deepened (or lightened) until body text and small print pass.
   const [bh, bs] = swatches.length ? hsl(swatches[0].hex) : [0, 0];
-  const seed = fromHsl(bh, Math.min(bs, 0.6), dark ? 0.16 : 0.92);
-  const background = adjustForContrast(seed, text, smallPrintMin);
+  const background =
+    mode === 'contrast' ? '#000000' : adjustForContrast(fromHsl(bh, Math.min(bs, 0.6), dark ? 0.16 : 0.92), text, smallPrintMin);
 
   // Accent: the most vivid color, favoring ones that cover more of the image. The dominant color
   // already set the background, so a different hue makes the better accent when there is one.
@@ -125,9 +127,9 @@ export function buildTheme(swatches: Swatch[]): ThemeColors {
     .map((s, i) => ({ ...s, hsl: hsl(s.hex), dominant: i === 0 }))
     .filter((s) => s.hsl[1] >= MIN_ACCENT_SATURATION)
     .sort((a, b) => Number(a.dominant) - Number(b.dominant) || b.hsl[1] * (0.3 + b.weight) - a.hsl[1] * (0.3 + a.weight));
-  const title = vivid.length ? adjustForContrast(vivid[0].hex, background, textMin) : text;
+  const title = vivid.length ? adjustForContrast(vivid[0].hex, background, colorMin) : text;
   const second = vivid.find((s) => vivid[0] && hueDistance(s.hsl[0], vivid[0].hsl[0]) >= 40);
-  const emphasis = second ? adjustForContrast(second.hex, background, textMin) : title;
+  const emphasis = second ? adjustForContrast(second.hex, background, colorMin) : title;
 
   const accentText = contrastRatio('#000000', title) >= contrastRatio(WHITE, title) ? '#000000' : WHITE;
   return {
@@ -146,6 +148,10 @@ export function buildTheme(swatches: Swatch[]): ThemeColors {
     qrDark: '#000000',
     logoVariant: dark ? 'light' : 'dark',
   };
+}
+
+export function buildPalettes(swatches: Swatch[]): ImagePalettes {
+  return { light: buildTheme(swatches, 'light'), dark: buildTheme(swatches, 'dark'), contrast: buildTheme(swatches, 'contrast') };
 }
 
 /** Samples opaque pixels from an image, downscaled so every image counts about the same. */
@@ -168,9 +174,9 @@ async function samplePixels(image: ImageAsset): Promise<Rgb[]> {
   return out;
 }
 
-/** Theme colors from the event's images, or null when there are none. */
-export async function themeFromImages(images: ImageAsset[]): Promise<ThemeColors | null> {
+/** Light, dark and high-contrast theme colors from the event's images, or null when there are none. */
+export async function palettesFromImages(images: ImageAsset[]): Promise<ImagePalettes | null> {
   if (images.length === 0) return null;
   const pixels = (await Promise.all(images.map((img) => samplePixels(img).catch(() => [])))).flat();
-  return pixels.length ? buildTheme(quantize(pixels)) : null;
+  return pixels.length ? buildPalettes(quantize(pixels)) : null;
 }

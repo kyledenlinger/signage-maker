@@ -137,9 +137,21 @@ export function findTheme(id: string): Theme {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
 
-/** The "Match my images" theme: colors built from the event's images (see lib/palette.ts). */
-export const IMAGE_THEME_ID = 'from-images';
-export const IMAGE_THEME_NAME = 'Match my images';
+/**
+ * "Match my images" themes: colors drawn from the event's images (see lib/palette.ts), in three
+ * moods. They sit alongside the WFU themes; they don't replace them.
+ */
+export type ImageThemeMode = 'light' | 'dark' | 'contrast';
+
+export const IMAGE_THEMES: { id: string; mode: ImageThemeMode; name: string }[] = [
+  { id: 'images-light', mode: 'light', name: 'Match my images: Light' },
+  { id: 'images-dark', mode: 'dark', name: 'Match my images: Dark' },
+  { id: 'images-contrast', mode: 'contrast', name: 'Match my images: High contrast' },
+];
+
+export function findImageTheme(id: string) {
+  return IMAGE_THEMES.find((t) => t.id === id);
+}
 
 export const THEME_COLOR_KEYS = [
   'background',
@@ -160,10 +172,11 @@ export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
 
 /** The colors of a generated theme; stored with the event so every render and export matches. */
 export type ThemeColors = Pick<Theme, ThemeColorKey | 'logoVariant'>;
+export type ImagePalettes = Record<ImageThemeMode, ThemeColors>;
 
 interface ThemeChoice {
   themeId: string;
-  imageTheme: ThemeColors | null;
+  imagePalettes: ImagePalettes | null;
   fontTitle?: string;
   fontBody?: string;
 }
@@ -173,16 +186,17 @@ const staticThemes = new Map<string, Theme>();
 const imageThemes = new WeakMap<ThemeColors, Map<string, Theme>>();
 
 /**
- * The theme an event renders with: its colors (a built-in theme, or "Match my images", which falls
- * back to the default until colors exist) and its chosen title and body fonts.
+ * The theme an event renders with: its colors (a WFU theme, or a "Match my images" theme, which
+ * falls back to the default until the images' colors exist) and its title and body fonts.
  */
 export function resolveTheme(event: ThemeChoice): Theme {
   const fonts = { fontDisplay: fontStack(event.fontTitle ?? DEFAULT_FONT_ID), fontBody: fontStack(event.fontBody ?? DEFAULT_FONT_ID) };
   const fontKey = `${fonts.fontDisplay}|${fonts.fontBody}`;
-  const colors = event.themeId === IMAGE_THEME_ID ? event.imageTheme : null;
+  const imageTheme = findImageTheme(event.themeId);
+  const colors = imageTheme && event.imagePalettes ? event.imagePalettes[imageTheme.mode] : null;
 
-  if (!colors) {
-    const base = findTheme(event.themeId === IMAGE_THEME_ID ? DEFAULT_THEME_ID : event.themeId);
+  if (!imageTheme || !colors) {
+    const base = findTheme(imageTheme ? DEFAULT_THEME_ID : event.themeId);
     const key = `${base.id}|${fontKey}`;
     let theme = staticThemes.get(key);
     if (!theme) staticThemes.set(key, (theme = { ...base, ...fonts }));
@@ -192,7 +206,7 @@ export function resolveTheme(event: ThemeChoice): Theme {
   if (!byFont) imageThemes.set(colors, (byFont = new Map()));
   let theme = byFont.get(fontKey);
   if (!theme) {
-    theme = { ...findTheme(DEFAULT_THEME_ID), ...colors, ...fonts, id: IMAGE_THEME_ID, name: IMAGE_THEME_NAME };
+    theme = { ...findTheme(DEFAULT_THEME_ID), ...colors, ...fonts, id: imageTheme.id, name: imageTheme.name };
     byFont.set(fontKey, theme);
   }
   return theme;

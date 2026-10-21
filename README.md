@@ -36,7 +36,7 @@ Themes: **Black and gold** (closest to current signage), **Athletics Gold**, **L
 
 **Fonts:** pick a title font and a body font under Design. All are self-hosted, openly licensed and chosen for legibility at a distance: Atkinson Hyperlegible (the default, designed for low-vision readers), Lexend, Public Sans, Source Sans 3, Inter and Source Serif 4.
 
-**Match my images** builds a theme from your background, photo and illustration. It appears in the Theme list once you add one of them, with swatches of the colors it picked. The colors are adjusted until every text color passes the same contrast rules as the built-in themes.
+**Match my images** builds themes from your background, photo and illustration, in three moods: **Light**, **Dark** and **High contrast**. They appear in the Theme list under the WFU themes once you add one of those images, with swatches of the colors picked. Colors are adjusted until every text color passes the same contrast rules as the WFU themes; High contrast holds all text to 7:1.
 
 ## Readable by default
 

@@ -1,8 +1,8 @@
 import { StrictMode, useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { findFormat, FORMAT_PRESETS } from '../config/formats';
-import { IMAGE_THEME_ID, resolveTheme, THEMES } from '../config/themes';
-import { themeFromImages } from '../lib/palette';
+import { findImageTheme, resolveTheme, THEMES } from '../config/themes';
+import { palettesFromImages } from '../lib/palette';
 import type { EventData, ImageAsset } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
@@ -13,7 +13,7 @@ import '../styles/fonts.css';
  * Development-only page used by the Playwright tests and for eyeballing layouts.
  *   ?template=split&format=landscape-hd&theme=black-gold&image=1&qr=1&fixture=sample&scale=0.4 (or scale=auto)
  *   ?matrix=1&theme=light   (every template × orientation × image × QR)
- *   Add bg=1 for a background image; theme=from-images builds the theme from the images;
+ *   Add bg=1 for a background image; theme=images-light|images-dark|images-contrast builds the theme from the images;
  *   fontTitle=lexend&fontBody=inter picks fonts (ids from config/fonts.ts).
  */
 
@@ -46,11 +46,11 @@ function Cell({ templateId, formatId, themeId, image, qr, fixture, scale, backgr
       }),
     [fixture, image, qr, templateId, themeId, background],
   );
-  const [event, setEvent] = useState<EventData | null>(themeId === IMAGE_THEME_ID ? null : base);
+  const [event, setEvent] = useState<EventData | null>(findImageTheme(themeId) ? null : base);
   useEffect(() => {
-    if (themeId !== IMAGE_THEME_ID) return setEvent(base);
+    if (!findImageTheme(themeId)) return setEvent(base);
     const images = [base.background, base.image, base.illustration].filter((i): i is ImageAsset => i !== null);
-    void themeFromImages(images).then((imageTheme) => setEvent({ ...base, imageTheme }));
+    void palettesFromImages(images).then((imagePalettes) => setEvent({ ...base, imagePalettes }));
   }, [base, themeId]);
   const [report, setReport] = useState<FitReport>();
   const id = `${templateId}__${formatId}__${themeId}__img${Number(image)}__qr${Number(qr)}${background ? '__bg1' : ''}`;

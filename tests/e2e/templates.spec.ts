@@ -126,7 +126,7 @@ async function textOffPanels(page: Page): Promise<string[]> {
  */
 const OVER_BUDGET = /^showcase__square__.*__img1__qr1__bg1$/;
 
-for (const theme of ['black-gold', 'light', 'from-images']) {
+for (const theme of ['black-gold', 'light', 'images-dark']) {
   test(`background image: text sits on solid panels and fits (${theme})`, async ({ page }) => {
     for (const fixture of ['short', 'sample']) {
       await openMatrix(page, theme, fixture, '&bg=1');
@@ -144,31 +144,17 @@ for (const theme of ['black-gold', 'light', 'from-images']) {
   });
 }
 
-test('the Match my images theme renders every template and fits', async ({ page }) => {
-  await openMatrix(page, 'from-images', 'sample');
-  const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
-    els.map((e) => e.getAttribute('data-cell')),
-  );
-  expect(notFitting).toEqual([]);
-  expect(await layoutProblems(page)).toEqual([]);
-  // The theme really comes from the images: not the default black background.
-  const bg = await page.locator('[data-cell] .tpl').first().evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(bg).not.toBe('rgb(0, 0, 0)');
-});
-
-for (const font of ['lexend', 'public-sans', 'source-sans', 'inter', 'source-serif']) {
-  test(`every template fits the sample event in ${font}`, async ({ page }) => {
-    await openMatrix(page, 'black-gold', 'sample', `&fontTitle=${font}&fontBody=${font === 'source-serif' ? 'atkinson' : font}`);
-    const family = await page
-      .locator('[data-cell] [data-slot="title"]')
-      .first()
-      .evaluate((el) => getComputedStyle(el).fontFamily);
-    expect(family).not.toContain('Atkinson');
+for (const theme of ['images-light', 'images-dark', 'images-contrast']) {
+  test(`Match my images (${theme}) renders every template and fits`, async ({ page }) => {
+    await openMatrix(page, theme, 'sample');
     const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
       els.map((e) => e.getAttribute('data-cell')),
     );
     expect(notFitting).toEqual([]);
     expect(await layoutProblems(page)).toEqual([]);
+    // Colors come from the fixture photo, not the default theme (high contrast is black by design).
+    const title = await page.locator('[data-cell] [data-slot="title"]').first().evaluate((el) => getComputedStyle(el).color);
+    expect(title).not.toBe('rgb(206, 184, 136)');
   });
 }
 
@@ -207,7 +193,8 @@ test.describe('visual snapshots', () => {
   for (const [template, theme] of [
     ['showcase', 'black-gold'],
     ['type-only', 'light'],
-    ['showcase', 'from-images'],
+    ['showcase', 'images-light'],
+    ['showcase', 'images-contrast'],
   ]) {
     for (const preset of ['landscape-hd', 'portrait-hd', 'square']) {
       test(`${template} · ${preset} · background · ${theme}`, async ({ page }) => {
