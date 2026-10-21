@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { FIELD_LIMITS, MAX_HIGHLIGHTS, MAX_LOGOS } from '../config/limits';
-import { THEMES } from '../config/themes';
 import { useFormats } from '../lib/formatStore';
 import { readImageFile } from '../lib/image';
 import { CustomSizes } from './CustomSizes';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { FocalPointPicker } from './FocalPointPicker';
+import { ThemeField } from './ThemeField';
 import { CheckboxField, errorAt, fieldId, ImageField, Section, SelectField, TextField } from './fields';
 
 export function EventForm() {
@@ -31,7 +31,16 @@ export function EventForm() {
           options={[
             { value: 'auto', label: 'Automatic (stacked on portrait formats)' },
             { value: 'inline', label: 'Inline (Fri, Oct 23)' },
-            { value: 'stacked', label: 'Stacked (23 / Oct)' },
+            { value: 'stacked', label: 'Stacked (Fri / 23 / Oct)' },
+          ]}
+        />
+        <SelectField
+          name="weekdayStyle"
+          label="Weekday"
+          options={[
+            { value: 'short', label: 'Short (Fri)' },
+            { value: 'long', label: 'Full (Friday)' },
+            { value: 'none', label: 'None' },
           ]}
         />
         <div className="field-row">
@@ -83,7 +92,7 @@ export function EventForm() {
           hint="JPG, PNG or WebP. At least 1920 px on the long edge is best."
           checkResolution
         />
-        <PhotoFocus />
+        <Focus image="image" name="imageFocus" what="photo" />
         <TextField
           name="imageDescription"
           label="Photo description"
@@ -97,6 +106,14 @@ export function EventForm() {
           accept="image/png,image/svg+xml"
           hint="Transparent PNG or SVG. Placed only where it never touches text; treated as decorative."
         />
+        <ImageField
+          name="background"
+          label="Background image"
+          accept="image/jpeg,image/png,image/webp"
+          hint="Fills the sign behind solid text panels, in Showcase and Type only. Treated as decorative."
+          checkResolution
+        />
+        <Focus image="background" name="backgroundFocus" what="background image" />
       </Section>
 
       <Section title="Logos and accessibility line">
@@ -113,12 +130,7 @@ export function EventForm() {
           required
           options={TEMPLATES.map((t) => ({ value: t.manifest.id, label: t.manifest.name }))}
         />
-        <SelectField
-          name="themeId"
-          label="Theme"
-          required
-          options={THEMES.map((t) => ({ value: t.id, label: t.name }))}
-        />
+        <ThemeField />
         <FormatsField />
       </Section>
     </div>
@@ -283,8 +295,8 @@ function FormatsField() {
   );
 }
 
-function PhotoFocus() {
+function Focus({ image, name, what }: { image: 'image' | 'background'; name: 'imageFocus' | 'backgroundFocus'; what: string }) {
   const { control } = useFormContext<EventData>();
-  const image = useWatch({ control, name: 'image' });
-  return image ? <FocalPointPicker image={image} /> : null;
+  const asset = useWatch({ control, name: image });
+  return asset ? <FocalPointPicker image={asset} name={name} what={what} /> : null;
 }

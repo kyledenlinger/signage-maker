@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FIELD_LIMITS, MAX_HIGHLIGHTS, MAX_LOGOS, type CharLimit } from '../config/limits';
+import { THEME_COLOR_KEYS } from '../config/themes';
 import { normalizeUrl } from '../lib/format';
 
 function text(limit: CharLimit) {
@@ -22,12 +23,21 @@ export const imageAssetSchema = z.object({
 });
 export type ImageAsset = z.infer<typeof imageAssetSchema>;
 
+const hex = z.string().regex(/^#[0-9a-f]{6}$/i);
+export const themeColorsSchema = z.object({
+  ...(Object.fromEntries(THEME_COLOR_KEYS.map((k) => [k, hex])) as Record<(typeof THEME_COLOR_KEYS)[number], typeof hex>),
+  logoVariant: z.enum(['light', 'dark']),
+});
+
+const focusSchema = z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) });
+
 export const eventSchema = z
   .object({
     title: required(FIELD_LIMITS.title, 'Title'),
     subtitle: text(FIELD_LIMITS.subtitle),
     date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date is required.'),
     dateStyle: z.enum(['auto', 'inline', 'stacked']),
+    weekdayStyle: z.enum(['short', 'long', 'none']),
     startTime: z.string().regex(/^\d{2}:\d{2}/, 'Start time is required.'),
     endTime: z.string(),
     recurringNote: text(FIELD_LIMITS.recurringNote),
@@ -47,16 +57,21 @@ export const eventSchema = z
     showQr: z.boolean(),
     image: imageAssetSchema.nullable(),
     /** Point to keep in view when the photo is cropped, 0–1 from the left and top. */
-    imageFocus: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }),
+    imageFocus: focusSchema,
     imageDescription: text(FIELD_LIMITS.imageDescription),
     imageCredit: text(FIELD_LIMITS.imageCredit),
     illustration: imageAssetSchema.nullable(),
+    /** Fills the canvas behind the text panels. Decorative. */
+    background: imageAssetSchema.nullable(),
+    backgroundFocus: focusSchema,
     showLockup: z.boolean(),
     logos: z.array(imageAssetSchema).max(MAX_LOGOS, `Use up to ${MAX_LOGOS} logos.`),
     showAccommodations: z.boolean(),
     accommodations: text(FIELD_LIMITS.accommodations),
     templateId: z.string().min(1, 'Choose a template.'),
     themeId: z.string().min(1, 'Choose a theme.'),
+    /** Colors for the "Match my images" theme, built from the event's images. */
+    imageTheme: themeColorsSchema.nullable(),
     formatIds: z.array(z.string()).min(1, 'Choose at least one format.'),
   })
   .superRefine((e, ctx) => {
@@ -91,6 +106,7 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'subtitle',
   'date',
   'dateStyle',
+  'weekdayStyle',
   'startTime',
   'endTime',
   'recurringNote',
@@ -106,11 +122,14 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'imageDescription',
   'imageCredit',
   'illustration',
+  'background',
+  'backgroundFocus',
   'showLockup',
   'logos',
   'showAccommodations',
   'accommodations',
   'templateId',
   'themeId',
+  'imageTheme',
   'formatIds',
 ];

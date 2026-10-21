@@ -5,6 +5,7 @@ export const COMMON_FIELDS: (keyof EventData)[] = [
   'subtitle',
   'recurringNote',
   'dateStyle',
+  'weekdayStyle',
   'endTime',
   'description',
   'highlights',

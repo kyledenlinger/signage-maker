@@ -8,8 +8,8 @@
 .to-title {
   grid-area: title;
 }
-.to-date {
-  grid-area: date;
+.to-when {
+  grid-area: when;
 }
 .to-details {
   grid-area: details;
@@ -23,13 +23,13 @@
   align-self: safe end;
 }
 
-/* Landscape: title and date left, details column right, QR bottom-right. */
+/* Landscape: title and when left, details column right, QR bottom-right. */
 .to--landscape {
   grid-template-columns: 3fr 2fr;
   grid-template-rows: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'title details'
-    'date details'
+    'when details'
     'footer qr';
 }
 .to--landscape .to-qr {
@@ -42,7 +42,7 @@
   grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   grid-template-areas:
     'title'
-    'date'
+    'when'
     'details'
     'qr'
     'footer';
@@ -57,7 +57,7 @@
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
     'title title'
-    'date date'
+    'when when'
     'details details'
     'footer qr';
 }

@@ -1,6 +1,23 @@
 import { sampleEvent } from '../schema/defaults';
 import type { EventData, ImageAsset } from '../schema/event';
 
+/** A deterministic background: dark teal with soft orange shapes. */
+export function fixtureBackground(): ImageAsset {
+  const canvas = document.createElement('canvas');
+  canvas.width = 2400;
+  canvas.height = 2400;
+  const ctx = canvas.getContext('2d')!;
+  ctx.fillStyle = '#12343B';
+  ctx.fillRect(0, 0, 2400, 2400);
+  ctx.fillStyle = '#E8833A';
+  for (let i = 0; i < 12; i++) {
+    ctx.beginPath();
+    ctx.arc((i * 523) % 2400, (i * 811) % 2400, 120 + (i % 4) * 60, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  return { name: 'background.png', dataUrl: canvas.toDataURL('image/png'), width: 2400, height: 2400, originalLongEdge: 2400 };
+}
+
 /** A deterministic test photo drawn on a canvas. */
 export function fixturePhoto(): ImageAsset {
   const canvas = document.createElement('canvas');
@@ -23,7 +40,10 @@ export function fixturePhoto(): ImageAsset {
 
 export type FixtureName = 'sample' | 'short' | 'long';
 
-export function fixtureEvent(name: FixtureName, opts: { image: boolean; qr: boolean; templateId: string; themeId: string }): EventData {
+export function fixtureEvent(
+  name: FixtureName,
+  opts: { image: boolean; qr: boolean; templateId: string; themeId: string; background?: boolean },
+): EventData {
   const base = sampleEvent();
   const event: EventData = {
     ...base,
@@ -33,6 +53,7 @@ export function fixtureEvent(name: FixtureName, opts: { image: boolean; qr: bool
     image: opts.image ? fixturePhoto() : null,
     imageDescription: opts.image ? 'Abstract shapes on a blue-to-orange gradient' : '',
     imageCredit: opts.image ? 'Photo: ZSR Library' : '',
+    background: opts.background ? fixtureBackground() : null,
   };
   if (name === 'short') {
     event.subtitle = '';

@@ -1,6 +1,6 @@
 import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
-import { DateBlock, Details, Footer, Illustration, Photo, QrTile, Title } from '../shared/parts';
+import { Backdrop, Details, Footer, Illustration, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
 import type { TemplateProps } from '../types';
 import { SHOWCASE_LAYOUT as L, showcaseManifest } from './manifest';
@@ -12,12 +12,15 @@ export function Showcase({ event, theme, format }: TemplateProps) {
   const layout = o === 'landscape' ? 'landscape' : 'portrait';
   const hasArt = Boolean(c.illustration || c.photo);
   const columns = o === 'landscape' ? L.landscapeColumns : o === 'square' ? L.squareColumns : L.portraitColumns;
-  const classes = ['tpl', 'sc', `sc--${layout}`, hasArt && 'sc--art', c.qrUrl && 'sc--qr'].filter(Boolean).join(' ');
+  const classes = ['tpl', 'sc', `sc--${layout}`, hasArt && 'sc--art', c.qrUrl && 'sc--qr', c.background && 'tpl--backdrop']
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <div className={classes} style={templateVars(theme, format, { '--sc-cols': columns })}>
+    <div className={classes} style={templateVars(theme, format, { '--sc-cols': columns }, { backdrop: Boolean(c.background) })}>
+      <Backdrop content={c} />
       <Title content={c} className="sc-title" />
-      <DateBlock content={c} className="sc-date" />
+      <WhenWhere content={c} className="sc-when" />
       {c.illustration ? (
         <Illustration content={c} className="sc-art" />
       ) : (
@@ -25,7 +28,7 @@ export function Showcase({ event, theme, format }: TemplateProps) {
       )}
       <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="sc-qr" />
       <Details content={c} className="sc-details" />
-      <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} className="sc-footer" />
+      <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o === 'square'} className="sc-footer" />
     </div>
   );
 }

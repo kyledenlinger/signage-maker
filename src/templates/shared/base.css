@@ -28,7 +28,12 @@
   min-width: 0;
   min-height: 0;
 }
-/* QR codes and footers never shrink; rows holding a QR size to it (minmax(min-content, 1fr)). */
+/*
+ * Titles, QR codes and footers never shrink below their content (rows holding a QR size to it with
+ * minmax(min-content, 1fr)). Squeezed elsewhere, they push content past a region or the safe zone,
+ * which the text fitter measures; squeezed here, they would silently overlap their neighbors.
+ */
+.tpl .t-title,
 .tpl .t-qr,
 .tpl .t-footer {
   min-width: auto;
@@ -58,12 +63,32 @@
 .t-date[data-field='date'] {
   white-space: nowrap;
 }
-.t-date-month {
-  /* Smaller than the day, but never below time and location. */
+.t-date-small {
+  /* Weekday and month beside a big day: smaller, but never below time and location. */
   font-size: max(calc(var(--fs-date) * var(--date-month-scale, 0.6)), var(--fs-timeLocation));
 }
 
+/* Date, time and location as one group. */
+.t-when {
+  display: flex;
+  flex-direction: column;
+}
+.t-when-body {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 3);
+}
+.t-when--stacked .t-when-body {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--gap);
+}
+
 .t-details {
+  display: flex;
+  flex-direction: column;
+}
+.t-details-body {
   display: flex;
   flex-direction: column;
   gap: calc(var(--gap) / 2);
@@ -99,9 +124,14 @@
 .t-footer {
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
+}
+.t-footer-body {
+  display: flex;
+  flex-direction: column;
   gap: calc(var(--gap) / 2);
 }
-.t-footer--row {
+.t-footer--row .t-footer-body {
   flex-direction: row-reverse;
   justify-content: flex-end;
   align-items: flex-end;
@@ -171,4 +201,33 @@
   left: 0;
   width: var(--accent-bar);
   background: var(--c-accent);
+}
+
+/* Background image: fills the canvas; every text block becomes a solid panel over it. */
+.t-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.t-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tpl--backdrop > :not(.t-backdrop) {
+  position: relative;
+  z-index: 1;
+}
+.tpl--backdrop .t-card,
+.tpl--backdrop .t-title {
+  background: var(--c-panel);
+  padding: var(--panel-pad);
+  border-radius: var(--panel-radius);
+  width: fit-content;
+  max-width: 100%;
+}
+.tpl--backdrop .t-title {
+  max-width: min(var(--title-measure), 100%);
 }

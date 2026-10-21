@@ -10,6 +10,7 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     subtitle: '',
     date: '',
     dateStyle: 'auto',
+    weekdayStyle: 'short',
     startTime: '',
     endTime: '',
     recurringNote: '',
@@ -25,12 +26,15 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     imageDescription: '',
     imageCredit: '',
     illustration: null,
+    background: null,
+    backgroundFocus: { x: 0.5, y: 0.5 },
     showLockup: true,
     logos: [],
     showAccommodations: true,
     accommodations: DEFAULT_ACCOMMODATIONS,
     templateId: DEFAULT_TEMPLATE_ID,
     themeId: DEFAULT_THEME_ID,
+    imageTheme: null,
     formatIds,
   };
 }

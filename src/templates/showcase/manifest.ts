@@ -8,7 +8,7 @@ export const showcaseManifest: TemplateManifest = {
   description:
     'Modeled on current ZSR signage: big title, large date block, QR tile, details column, logo bottom-left, optional illustration or photo.',
   orientations: ['landscape', 'portrait', 'square'],
-  usesFields: [...COMMON_FIELDS, ...PHOTO_FIELDS, 'illustration'],
+  usesFields: [...COMMON_FIELDS, ...PHOTO_FIELDS, 'illustration', 'background', 'backgroundFocus'],
   slots: {
     title: { minU: MIN_FONT_U.title, maxU: 13 },
     date: { minU: MIN_FONT_U.primary, maxU: 10 },

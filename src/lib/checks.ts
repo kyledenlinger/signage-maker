@@ -1,6 +1,6 @@
 import type { FormatPreset } from '../config/formats';
 import { CONTRAST_MIN, FIELD_LIMITS, GLANCE_WORD_LIMIT, IMAGE_PX, type CharLimit } from '../config/limits';
-import { findTheme, type Theme } from '../config/themes';
+import { resolveTheme, type Theme } from '../config/themes';
 import type { EventData } from '../schema/event';
 import { FIELD_LABELS } from '../schema/labels';
 import { signContent, visibleWords } from '../templates/shared/content';
@@ -126,15 +126,26 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
   }
 
   const { manifest } = resolveTemplate(event.templateId, event);
-  const photoShown = event.image && manifest.usesFields.includes('image');
-  if (photoShown && event.image!.originalLongEdge < IMAGE_PX.warnBelow) {
-    out.push(issue('warning', null, 'image', `${event.image!.originalLongEdge} px on the long edge`, `use an image at least ${IMAGE_PX.warnBelow} px wide for sharp results`));
+  if (event.background && !manifest.usesFields.includes('background')) {
+    out.push(issue('warning', null, 'templateId', `${manifest.name} doesn't show background images`, 'choose Showcase or Type only to use the background'));
+  }
+
+  // Resolution of the images the sign actually shows.
+  const shown = (['image', 'background'] as const).filter((field) => event[field] && manifest.usesFields.includes(field));
+  for (const field of shown) {
+    const edge = event[field]!.originalLongEdge;
+    if (edge < IMAGE_PX.warnBelow) {
+      out.push(issue('warning', null, field, `${edge} px on the long edge`, `use an image at least ${IMAGE_PX.warnBelow} px wide for sharp results`));
+    }
   }
 
   for (const format of formats) {
     const hiRes = format.dpi !== undefined || Math.max(format.width, format.height) >= IMAGE_PX.hiResFormatEdge;
-    if (photoShown && hiRes && event.image!.originalLongEdge < IMAGE_PX.blockBelowForHiRes) {
-      out.push(issue('blocking', format, 'image', `${event.image!.originalLongEdge} px is too small for this size`, `use an image at least ${IMAGE_PX.blockBelowForHiRes} px wide, or skip this format`));
+    for (const field of shown) {
+      const edge = event[field]!.originalLongEdge;
+      if (hiRes && edge < IMAGE_PX.blockBelowForHiRes) {
+        out.push(issue('blocking', format, field, `${edge} px is too small for this size`, `use an image at least ${IMAGE_PX.blockBelowForHiRes} px wide, or skip this format`));
+      }
     }
     if (format.orientation !== 'portrait') {
       const words = visibleWords(signContent(event, format, manifest));
@@ -144,7 +155,7 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
     }
   }
 
-  out.push(...themeContrastIssues(findTheme(event.themeId)));
+  out.push(...themeContrastIssues(resolveTheme(event)));
   return out;
 }
 

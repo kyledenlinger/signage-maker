@@ -5,7 +5,7 @@ import type { TemplateManifest } from '../types';
 
 export type DateContent =
   | { kind: 'inline'; text: string; field: 'date' | 'recurringNote' }
-  | { kind: 'stacked'; day: string; month: string; field: 'date' };
+  | { kind: 'stacked'; weekday: string; day: string; month: string; field: 'date' };
 
 /** Everything a template shows for one event on one format. Also used to count visible words. */
 export interface SignContent {
@@ -22,6 +22,8 @@ export interface SignContent {
   photo: ImageAsset | null;
   focus: { x: number; y: number };
   illustration: ImageAsset | null;
+  background: ImageAsset | null;
+  backgroundFocus: { x: number; y: number };
   credit: string;
   accommodations: string;
   showLockup: boolean;
@@ -38,10 +40,10 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
   if (note) {
     date = { kind: 'inline', text: note, field: 'recurringNote' };
   } else if (style === 'stacked') {
-    const stacked = formatDateStacked(event.date);
+    const stacked = formatDateStacked(event.date, event.weekdayStyle);
     if (stacked) date = { kind: 'stacked', ...stacked, field: 'date' };
   } else {
-    const text = formatDateInline(event.date);
+    const text = formatDateInline(event.date, event.weekdayStyle);
     if (text) date = { kind: 'inline', text, field: 'date' };
   }
 
@@ -61,6 +63,8 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
     photo,
     focus: event.imageFocus,
     illustration: uses('illustration') ? event.illustration : null,
+    background: uses('background') ? event.background : null,
+    backgroundFocus: event.backgroundFocus,
     credit: photo && uses('imageCredit') ? event.imageCredit.trim() : '',
     accommodations: event.showAccommodations ? event.accommodations.trim() : '',
     showLockup: event.showLockup,
@@ -69,7 +73,8 @@ export function signContent(event: EventData, format: FormatPreset, manifest: Te
 }
 
 export function visibleWords(content: SignContent): number {
-  const date = content.date ? (content.date.kind === 'inline' ? content.date.text : `${content.date.day} ${content.date.month}`) : '';
+  const d = content.date;
+  const date = d ? (d.kind === 'inline' ? d.text : `${d.weekday} ${d.day} ${d.month}`) : '';
   const text = [
     content.title,
     content.subtitle,

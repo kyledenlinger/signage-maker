@@ -127,3 +127,42 @@ export const DEFAULT_THEME_ID = 'black-gold';
 export function findTheme(id: string): Theme {
   return THEMES.find((t) => t.id === id) ?? THEMES[0];
 }
+
+/** The "Match my images" theme: colors built from the event's images (see lib/palette.ts). */
+export const IMAGE_THEME_ID = 'from-images';
+export const IMAGE_THEME_NAME = 'Match my images';
+
+export const THEME_COLOR_KEYS = [
+  'background',
+  'panel',
+  'text',
+  'textMuted',
+  'title',
+  'emphasis',
+  'accent',
+  'accentText',
+  'rule',
+  'qrTile',
+  'qrFrame',
+  'qrDark',
+] as const;
+export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
+
+/** The colors of a generated theme; stored with the event so every render and export matches. */
+export type ThemeColors = Pick<Theme, ThemeColorKey | 'logoVariant'>;
+
+/** One theme object per set of image colors, so renders that depend on the theme stay stable. */
+const imageThemes = new WeakMap<ThemeColors, Theme>();
+
+/** The theme an event renders with. "Match my images" falls back to the default until colors exist. */
+export function resolveTheme(event: { themeId: string; imageTheme: ThemeColors | null }): Theme {
+  if (event.themeId !== IMAGE_THEME_ID) return findTheme(event.themeId);
+  const colors = event.imageTheme;
+  if (!colors) return findTheme(DEFAULT_THEME_ID);
+  let theme = imageThemes.get(colors);
+  if (!theme) {
+    theme = { ...findTheme(DEFAULT_THEME_ID), ...colors, id: IMAGE_THEME_ID, name: IMAGE_THEME_NAME };
+    imageThemes.set(colors, theme);
+  }
+  return theme;
+}

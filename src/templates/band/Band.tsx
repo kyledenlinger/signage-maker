@@ -1,6 +1,6 @@
 import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
-import { DateBlock, Details, Footer, Photo, QrTile, Title } from '../shared/parts';
+import { Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
 import type { TemplateProps } from '../types';
 import { BAND_LAYOUT as L, bandManifest } from './manifest';
@@ -17,7 +17,7 @@ export function Band({ event, theme, format }: TemplateProps) {
       <div className="bd-band" data-fit-region>
         <div className="bd-head" data-fit-region>
           <Title content={c} />
-          <DateBlock content={c} />
+          <WhenWhere content={c} />
         </div>
         <Details content={c} className="bd-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="bd-qr" />

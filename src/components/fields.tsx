@@ -149,7 +149,7 @@ export function SelectField({ name, label, required, options, hint }: SelectFiel
 }
 
 interface ImageFieldProps {
-  name: 'image' | 'illustration';
+  name: 'image' | 'illustration' | 'background';
   label: string;
   accept: string;
   hint?: string;

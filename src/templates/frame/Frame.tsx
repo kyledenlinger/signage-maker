@@ -1,7 +1,7 @@
 import { canvasUnit } from '../../config/formats';
 import { LAYOUT } from '../../config/layout';
 import { signContent } from '../shared/content';
-import { DateBlock, Details, Footer, Photo, QrTile, Title } from '../shared/parts';
+import { Details, Footer, Photo, QrTile, Title, WhenWhere } from '../shared/parts';
 import { templateVars } from '../shared/vars';
 import type { TemplateProps } from '../types';
 import { FRAME_LAYOUT as L, frameManifest } from './manifest';
@@ -21,7 +21,7 @@ export function Frame({ event, theme, format }: TemplateProps) {
       </div>
       <div className="fr-text" data-fit-region>
         <Title content={c} className="fr-title" />
-        <DateBlock content={c} className="fr-date" />
+        <WhenWhere content={c} className="fr-when" />
         <Details content={c} className="fr-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="fr-qr" />
         <Footer content={c} theme={theme} format={format} logoHeightU={LAYOUT.logoHeightU} row={o === 'square'} className="fr-footer" />

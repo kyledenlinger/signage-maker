@@ -12,8 +12,8 @@ const PRESETS = [
   'tabloid-poster',
 ];
 
-async function openMatrix(page: Page, theme: string, fixture: string) {
-  await page.goto(`/gallery.html?matrix=1&theme=${theme}&fixture=${fixture}&scale=0.12`);
+async function openMatrix(page: Page, theme: string, fixture: string, extra = '') {
+  await page.goto(`/gallery.html?matrix=1&theme=${theme}&fixture=${fixture}&scale=0.12${extra}`);
   await page.evaluate(() => document.fonts.ready);
   await expect(page.locator('[data-cell][data-fits="pending"]')).toHaveCount(0);
   // 5 templates × 3 orientation classes × image on/off × QR on/off
@@ -91,6 +91,68 @@ for (const theme of THEMES) {
   });
 }
 
+/** Text in backdrop mode must sit on an opaque panel, never directly on the background image. */
+async function textOffPanels(page: Page): Promise<string[]> {
+  return page.evaluate(() => {
+    const problems: string[] = [];
+    for (const root of Array.from(document.querySelectorAll('.tpl--backdrop'))) {
+      const id = root.closest('[data-cell]')!.getAttribute('data-cell');
+      for (const el of Array.from(root.querySelectorAll('[data-slot]'))) {
+        let node: Element | null = el;
+        let onPanel = false;
+        while (node && node !== root) {
+          const bg = getComputedStyle(node).backgroundColor;
+          const alpha = bg.startsWith('rgba') ? parseFloat(bg.split(',')[3]) : bg === 'transparent' ? 0 : 1;
+          if (alpha === 1) {
+            onPanel = true;
+            break;
+          }
+          if (alpha > 0) break; // see-through panels don't count
+          node = node.parentElement;
+        }
+        if (!onPanel) problems.push(`${id}: ${el.getAttribute('data-field')} not on a solid panel`);
+      }
+    }
+    return problems;
+  });
+}
+
+/**
+ * Square Showcase with a photo, a background and the full 40-word sample is over budget (and over the
+ * 35-word glance limit): the app blocks it and says what to cut. A typical event fits everywhere.
+ */
+const OVER_BUDGET = /^showcase__square__.*__img1__qr1__bg1$/;
+
+for (const theme of ['black-gold', 'light', 'from-images']) {
+  test(`background image: text sits on solid panels and fits (${theme})`, async ({ page }) => {
+    for (const fixture of ['short', 'sample']) {
+      await openMatrix(page, theme, fixture, '&bg=1');
+      // Showcase and Type only (and Frame without a photo, which becomes Type only) use the background.
+      expect(await page.locator('.tpl--backdrop').count()).toBe(30);
+      const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
+        els.map((e) => e.getAttribute('data-cell')!),
+      );
+      if (fixture === 'short') expect(notFitting).toEqual([]);
+      else for (const id of notFitting) expect(id).toMatch(OVER_BUDGET);
+      const problems = (await layoutProblems(page)).filter((p) => !notFitting.some((id) => p.startsWith(id)));
+      expect(problems).toEqual([]);
+      expect(await textOffPanels(page)).toEqual([]);
+    }
+  });
+}
+
+test('the Match my images theme renders every template and fits', async ({ page }) => {
+  await openMatrix(page, 'from-images', 'sample');
+  const notFitting = await page.locator('[data-cell][data-fits="false"]').evaluateAll((els) =>
+    els.map((e) => e.getAttribute('data-cell')),
+  );
+  expect(notFitting).toEqual([]);
+  expect(await layoutProblems(page)).toEqual([]);
+  // The theme really comes from the images: not the default black background.
+  const bg = await page.locator('[data-cell] .tpl').first().evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(bg).not.toBe('rgb(0, 0, 0)');
+});
+
 test('rendered sizes keep the hierarchy and the floors', async ({ page }) => {
   await openMatrix(page, 'light', 'sample');
   const sizes = await page
@@ -118,6 +180,27 @@ test.describe('visual snapshots', () => {
         const cell = page.locator('[data-cell]');
         await expect(cell).toHaveAttribute('data-fits', 'true');
         await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}.png`, { maxDiffPixelRatio: 0.01 });
+      });
+    }
+  }
+
+  // Background images (Showcase and Type only) and the Match my images theme.
+  for (const [template, theme] of [
+    ['showcase', 'black-gold'],
+    ['type-only', 'light'],
+    ['showcase', 'from-images'],
+  ]) {
+    for (const preset of ['landscape-hd', 'portrait-hd', 'square']) {
+      test(`${template} · ${preset} · background · ${theme}`, async ({ page }) => {
+        await page.goto(
+          `/gallery.html?template=${template}&format=${preset}&theme=${theme}&image=0&qr=1&bg=1&fixture=sample&scale=auto`,
+        );
+        await page.evaluate(() => document.fonts.ready);
+        const cell = page.locator('[data-cell]');
+        await expect(cell).toHaveAttribute('data-fits', 'true');
+        await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}-bg-${theme}.png`, {
+          maxDiffPixelRatio: 0.01,
+        });
       });
     }
   }

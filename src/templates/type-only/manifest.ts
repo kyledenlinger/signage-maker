@@ -5,9 +5,9 @@ import type { TemplateManifest } from '../types';
 export const typeOnlyManifest: TemplateManifest = {
   id: 'type-only',
   name: 'Type only',
-  description: 'No image. A large title on solid color with the details in a column.',
+  description: 'No photo. A large title on solid color (or panels over a background image) with the details in a column.',
   orientations: ['landscape', 'portrait', 'square'],
-  usesFields: COMMON_FIELDS,
+  usesFields: [...COMMON_FIELDS, 'background', 'backgroundFocus'],
   slots: {
     title: { minU: MIN_FONT_U.title, maxU: 15 },
     date: { minU: MIN_FONT_U.primary, maxU: 10 },

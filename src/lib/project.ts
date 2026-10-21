@@ -1,6 +1,6 @@
 import type { FormatPreset } from '../config/formats';
 import { blankEvent } from '../schema/defaults';
-import { imageAssetSchema, type EventData, type ImageAsset } from '../schema/event';
+import { imageAssetSchema, themeColorsSchema, type EventData, type ImageAsset } from '../schema/event';
 import { slugify } from './format';
 
 export const PROJECT_KIND = 'zsr-signage-project';
@@ -52,15 +52,21 @@ export function coerceEvent(raw: Record<string, unknown>): EventData {
     }
   }
   if (!['auto', 'inline', 'stacked'].includes(out.dateStyle as string)) out.dateStyle = blank.dateStyle;
+  if (!['short', 'long', 'none'].includes(out.weekdayStyle as string)) out.weekdayStyle = blank.weekdayStyle;
   out.image = image(raw.image);
   out.illustration = image(raw.illustration);
+  out.background = image(raw.background);
+  const colors = themeColorsSchema.safeParse(raw.imageTheme);
+  out.imageTheme = colors.success ? colors.data : null;
   out.logos = Array.isArray(raw.logos) ? raw.logos.map(image).filter((l): l is ImageAsset => l !== null) : [];
   out.highlights = Array.isArray(raw.highlights)
     ? raw.highlights.filter((h) => isRecord(h) && typeof h.value === 'string').map((h) => ({ value: (h as { value: string }).value }))
     : [];
-  const focus = raw.imageFocus;
   const unit = (n: unknown) => typeof n === 'number' && n >= 0 && n <= 1;
-  out.imageFocus = isRecord(focus) && unit(focus.x) && unit(focus.y) ? { x: focus.x, y: focus.y } : blank.imageFocus;
+  const focus = (value: unknown, fallback: { x: number; y: number }) =>
+    isRecord(value) && unit(value.x) && unit(value.y) ? { x: value.x as number, y: value.y as number } : fallback;
+  out.imageFocus = focus(raw.imageFocus, blank.imageFocus);
+  out.backgroundFocus = focus(raw.backgroundFocus, blank.backgroundFocus);
   out.formatIds = Array.isArray(raw.formatIds) ? raw.formatIds.filter((id) => typeof id === 'string') : blank.formatIds;
   return out as unknown as EventData;
 }
@@ -99,6 +105,11 @@ export function duplicateEvent(event: EventData): EventData {
     showAccommodations: event.showAccommodations,
     accommodations: event.accommodations,
     dateStyle: event.dateStyle,
+    weekdayStyle: event.weekdayStyle,
     showQr: event.showQr,
+    // The background and the colors drawn from it are part of a series' look.
+    background: event.background,
+    backgroundFocus: event.backgroundFocus,
+    imageTheme: event.background ? event.imageTheme : null,
   };
 }

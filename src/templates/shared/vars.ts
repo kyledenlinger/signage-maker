@@ -8,7 +8,12 @@ import type { Theme } from '../../config/themes';
  * CSS custom properties every template can rely on. Font sizes (--fs-*) are set separately by
  * the text fitter on the host element.
  */
-export function templateVars(theme: Theme, format: FormatPreset, extra: Record<string, string> = {}): CSSProperties {
+export function templateVars(
+  theme: Theme,
+  format: FormatPreset,
+  extra: Record<string, string> = {},
+  options: { backdrop?: boolean } = {},
+): CSSProperties {
   const u = canvasUnit(format);
   const px = (units: number) => `${units * u}px`;
   return {
@@ -17,8 +22,10 @@ export function templateVars(theme: Theme, format: FormatPreset, extra: Record<s
     '--h': `${format.height}px`,
     '--safe-x': `${format.safeZone.x}px`,
     '--safe-y': `${format.safeZone.y}px`,
-    '--gap': px(LAYOUT.gapU),
+    '--gap': px(options.backdrop ? LAYOUT.panel.gapU : LAYOUT.gapU),
     '--accent-bar': px(LAYOUT.accentBarU),
+    '--panel-pad': px(LAYOUT.panel.paddingU),
+    '--panel-radius': px(LAYOUT.panel.radiusU),
     '--qr-tile-radius': px(LAYOUT.qrTile.radiusU),
     '--qr-tile-pad': px(LAYOUT.qrTile.paddingU),
     '--qr-tile-border': px(LAYOUT.qrTile.borderU),

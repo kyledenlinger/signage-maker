@@ -6,10 +6,11 @@ Everything happens in your browser. Nothing you type or upload is sent anywhere.
 
 ## Making a sign
 
-1. **Fill in the event.** Title, date, start time and location are required; everything else is optional. Each text field shows a character count. Going past the recommended count makes a sign harder to read at a glance; going past the limit blocks export until you shorten it.
+1. **Fill in the event.** Title, date, start time and location are required; everything else is optional. The date, time and location always appear together on the sign. The weekday is shown short by default ("Fri, Oct 23"); choose *Full* ("Friday") or *None* under **Weekday**. Each text field shows a character count. Going past the recommended count makes a sign harder to read at a glance; going past the limit blocks export until you shorten it.
 2. **Add images (optional).**
    - **Photo:** used by Showcase, Split, Band and Frame. Add a short description (it becomes the alt text). Click the part of the photo that must stay visible, or use the *Left to right* and *Top to bottom* sliders, and every format crops around that point. Use a photo at least 1920 px wide.
    - **Illustration:** a transparent PNG or SVG for Showcase. It's placed where it never touches text.
+   - **Background image:** fills the whole sign in Showcase and Type only, with every block of text on a solid panel over it. Like the photo, it has a focal point.
    - **Logos:** the WF | Wake Forest ZSR lockup is on by default. You can add up to three more (SVG or PNG with a transparent background).
 3. **Choose a design.** Pick a template, a theme and the formats you need. Landscape HD, Portrait HD and Letter poster are selected to start; your choice is remembered.
 4. **Check the previews.** All selected formats update as you type. The **Readability check** panel lists anything to fix, as *format · field · problem · fix*. Click an item to jump to the field. Items marked **Blocks export** must be fixed before that format can download; **Warnings** are advice.
@@ -33,11 +34,13 @@ Submit the files through the usual campus signage form.
 
 Themes: **Black and gold** (closest to current signage), **Athletics Gold**, **Light** and **High contrast**. All pass the contrast rules for signage.
 
+**Match my images** builds a theme from your background, photo and illustration. It appears in the Theme list once you add one of them, with swatches of the colors it picked. The colors are adjusted until every text color passes the same contrast rules as the built-in themes.
+
 ## Readable by default
 
 The app enforces readability so you don't have to:
 
-- Text always sits on a solid color, never on top of a photo.
+- Text always sits on a solid color, never on top of a photo or background image.
 - Text shrinks to fit, but never below a minimum size, and is never cut off or broken mid-word. If it still doesn't fit, that format is blocked and the panel says roughly how many characters to cut.
 - The title is always the largest text, then the date, then time and location, then everything else.
 - QR codes are always dark on a light tile and large enough to scan (at least 1.25 in on print).

@@ -1,7 +1,9 @@
 /** Display formatting for event fields. Locale-independent so every browser renders the same text. */
 
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+export type WeekdayStyle = 'short' | 'long' | 'none';
 
 function parseDate(iso: string): Date | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
@@ -10,18 +12,29 @@ function parseDate(iso: string): Date | null {
   return Number.isNaN(d.getTime()) ? null : d;
 }
 
-/** "Thu, Nov 6" */
-export function formatDateInline(iso: string): string {
-  const d = parseDate(iso);
-  if (!d) return '';
-  return `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
+/** "Fri", "Friday" or "" */
+function weekday(d: Date, style: WeekdayStyle): string {
+  const name = WEEKDAYS[d.getDay()];
+  return style === 'none' ? '' : style === 'short' ? name.slice(0, 3) : name;
 }
 
-/** { day: "23", month: "Oct" } */
-export function formatDateStacked(iso: string): { day: string; month: string } | null {
+/** "Thu, Nov 6", "Thursday, Nov 6" or "Nov 6" */
+export function formatDateInline(iso: string, style: WeekdayStyle = 'short'): string {
+  const d = parseDate(iso);
+  if (!d) return '';
+  const date = `${MONTHS[d.getMonth()]} ${d.getDate()}`;
+  const day = weekday(d, style);
+  return day ? `${day}, ${date}` : date;
+}
+
+/** { weekday: "Fri", day: "23", month: "Oct" } (weekday is "" when style is none) */
+export function formatDateStacked(
+  iso: string,
+  style: WeekdayStyle = 'short',
+): { weekday: string; day: string; month: string } | null {
   const d = parseDate(iso);
   if (!d) return null;
-  return { day: String(d.getDate()), month: MONTHS[d.getMonth()] };
+  return { weekday: weekday(d, style), day: String(d.getDate()), month: MONTHS[d.getMonth()] };
 }
 
 interface ParsedTime {

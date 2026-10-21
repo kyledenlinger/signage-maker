@@ -26,7 +26,7 @@
   grid-template-rows: auto auto minmax(min-content, 1fr) auto;
   grid-template-areas:
     'title title'
-    'date date'
+    'when when'
     'details qr'
     'footer qr';
   gap: var(--gap);
@@ -34,8 +34,8 @@
 .fr-title {
   grid-area: title;
 }
-.fr-date {
-  grid-area: date;
+.fr-when {
+  grid-area: when;
 }
 .fr-details {
   grid-area: details;

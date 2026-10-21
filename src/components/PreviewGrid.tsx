@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FileType, FormatPreset } from '../config/formats';
-import { findTheme } from '../config/themes';
+import { resolveTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
 import { useFormats } from '../lib/formatStore';
 import type { EventData } from '../schema/event';
@@ -81,7 +81,7 @@ function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: C
           <div className="preview-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
             <TemplateRenderer
               event={event}
-              theme={findTheme(event.themeId)}
+              theme={resolveTheme(event)}
               format={format}
               onFit={(report) => {
                 setFits(report.fits);

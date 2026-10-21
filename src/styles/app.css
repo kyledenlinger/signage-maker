@@ -566,3 +566,23 @@ button {
   color: var(--text-muted);
   font-size: 0.95rem;
 }
+
+.swatches {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+.swatches li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.swatch {
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}

@@ -4,7 +4,7 @@ import JSZip from 'jszip';
 import { flushSync } from 'react-dom';
 import { createRoot } from 'react-dom/client';
 import type { FileType, FormatPreset } from '../config/formats';
-import { findTheme } from '../config/themes';
+import { resolveTheme } from '../config/themes';
 import type { EventData } from '../schema/event';
 import { fontEmbedCss } from './fontEmbed';
 
@@ -43,7 +43,7 @@ export async function renderFormat(event: EventData, format: FormatPreset): Prom
   document.body.append(stage);
   const root = createRoot(stage);
   let report: FitReport | null = null;
-  const theme = findTheme(event.themeId);
+  const theme = resolveTheme(event);
 
   try {
     flushSync(() =>

@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { cleanUrl, formatDateInline, formatDateStacked, formatTimeRange, normalizeUrl, slugify } from './format';
 
 describe('dates', () => {
-  it('formats inline and stacked', () => {
+  it('formats inline and stacked, with the weekday short by default', () => {
     expect(formatDateInline('2025-11-06')).toBe('Thu, Nov 6');
-    expect(formatDateStacked('2026-10-23')).toEqual({ day: '23', month: 'Oct' });
+    expect(formatDateInline('2025-11-06', 'long')).toBe('Thursday, Nov 6');
+    expect(formatDateInline('2025-11-06', 'none')).toBe('Nov 6');
+    expect(formatDateStacked('2026-10-23')).toEqual({ weekday: 'Fri', day: '23', month: 'Oct' });
+    expect(formatDateStacked('2026-10-23', 'long')).toEqual({ weekday: 'Friday', day: '23', month: 'Oct' });
+    expect(formatDateStacked('2026-10-23', 'none')).toEqual({ weekday: '', day: '23', month: 'Oct' });
     expect(formatDateInline('')).toBe('');
   });
 });

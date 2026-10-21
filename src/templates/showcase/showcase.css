@@ -10,8 +10,8 @@
 .sc-title {
   grid-area: title;
 }
-.sc-date {
-  grid-area: date;
+.sc-when {
+  grid-area: when;
 }
 .sc-art {
   grid-area: art;
@@ -25,44 +25,51 @@
 }
 .sc-footer {
   grid-area: footer;
-  align-self: safe end;
 }
 
-/* Landscape: title top-left, big date center, QR top-right, details column right, logo bottom-left. */
+/*
+ * Landscape: title top-left; date, time and location together left of center; QR top-right;
+ * details column right; logo bottom-left.
+ */
 .sc--landscape {
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
     'title title qr'
-    'date date details'
+    'when when details'
     'footer footer details';
 }
 .sc--landscape.sc--art {
   grid-template-areas:
     'title title qr'
-    'date art details'
+    'when art details'
     'footer footer details';
 }
-.sc--landscape .sc-date {
-  align-self: safe center;
+.sc--landscape .sc-when {
+  justify-content: safe center;
 }
 .sc--landscape .sc-details {
   justify-content: safe flex-end;
 }
 
-/* Portrait and square: title, illustration band with QR beside it, stacked date beside details. */
+/*
+ * Portrait and square: title; illustration band with the QR beside it; then the date badge with
+ * time and location; then the details.
+ */
 .sc--portrait {
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto minmax(min-content, 1fr) auto;
   grid-template-areas:
     'title title title'
-    'date details details'
+    'when when when'
+    'details details qr'
     'footer footer qr';
 }
 .sc--portrait.sc--art {
-  grid-template-rows: auto minmax(min-content, 1fr) auto auto;
+  grid-template-rows: auto minmax(min-content, 1fr) auto auto auto;
   grid-template-areas:
     'title title title'
     'art art qr'
-    'date details details'
+    'when when when'
+    'details details details'
     'footer footer footer';
 }
 .sc--portrait .sc-qr {
@@ -71,10 +78,8 @@
 .sc--portrait.sc--art .sc-qr {
   align-self: safe center;
 }
-/* Without art, the date and details sit in the middle of the open space. */
+/* Without art, the details sit in the middle of the open space. */
 .sc--portrait:not(.sc--art) .sc-details {
   justify-content: safe center;
 }
-.sc--portrait:not(.sc--art) .sc-date {
-  align-self: safe center;
-}
+
