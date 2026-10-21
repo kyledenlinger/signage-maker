@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
 const THEMES = ['black-gold', 'athletics-gold', 'light', 'high-contrast'];
+
+// Matrix tests render 60 full-size signs per pass (some with image sampling); CI machines are slower.
+test.describe.configure({ timeout: 120_000 });
 const TEMPLATES = ['showcase', 'split', 'band', 'type-only', 'frame'];
 const PRESETS = [
   'landscape-hd',
