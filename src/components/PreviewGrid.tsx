@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { FORMAT_PRESETS, type FileType, type FormatPreset } from '../config/formats';
+import type { FileType, FormatPreset } from '../config/formats';
 import { findTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
+import { useFormats } from '../lib/formatStore';
 import type { EventData } from '../schema/event';
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
 
@@ -15,7 +16,7 @@ interface Props {
 }
 
 export function PreviewGrid({ event, onFit, blockedIds, exporting, onDownload }: Props) {
-  const formats = FORMAT_PRESETS.filter((f) => event.formatIds.includes(f.id));
+  const formats = useFormats().filter((f) => event.formatIds.includes(f.id));
   if (formats.length === 0) {
     return <p className="preview-empty">Choose at least one format to see a preview.</p>;
   }
@@ -76,17 +77,19 @@ function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: C
         aria-label={previewAltText(event, format)}
         style={{ aspectRatio: `${format.width} / ${format.height}` }}
       >
-        <div className="preview-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-          <TemplateRenderer
-            event={event}
-            theme={findTheme(event.themeId)}
-            format={format}
-            onFit={(report) => {
-              setFits(report.fits);
-              onFit(report);
-            }}
-          />
-        </div>
+        {width > 0 && (
+          <div className="preview-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
+            <TemplateRenderer
+              event={event}
+              theme={findTheme(event.themeId)}
+              format={format}
+              onFit={(report) => {
+                setFits(report.fits);
+                onFit(report);
+              }}
+            />
+          </div>
+        )}
       </div>
       <div className="card-actions">
         <span className="card-actions-label" aria-hidden="true">

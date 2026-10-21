@@ -1,4 +1,4 @@
-import { FORMAT_PRESETS, type FormatPreset } from '../config/formats';
+import type { FormatPreset } from '../config/formats';
 import { CONTRAST_MIN, FIELD_LIMITS, GLANCE_WORD_LIMIT, IMAGE_PX, type CharLimit } from '../config/limits';
 import { findTheme, type Theme } from '../config/themes';
 import type { EventData } from '../schema/event';
@@ -7,6 +7,7 @@ import { signContent, visibleWords } from '../templates/shared/content';
 import { findTemplate, resolveTemplate } from '../templates/registry';
 import type { FitReport } from '../templates/TemplateRenderer';
 import { contrastRatio } from './contrast';
+import { allFormats, findAnyFormat } from './formatStore';
 
 export type Severity = 'blocking' | 'warning';
 
@@ -89,7 +90,7 @@ export function themeContrastIssues(theme: Theme): Issue[] {
 /** Checks that don't need the rendered output. */
 export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
   const out: Issue[] = [];
-  const formats = FORMAT_PRESETS.filter((f) => formatIds.includes(f.id));
+  const formats = allFormats().filter((f) => formatIds.includes(f.id));
   const chosen = findTemplate(event.templateId);
 
   for (const { field, limit } of TEXT_FIELDS) {
@@ -150,7 +151,7 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
 /** Text that doesn't fit at minimum size, from the rendered output. */
 export function fitIssues(reports: FitReport[]): Issue[] {
   return reports.flatMap((report) => {
-    const format = FORMAT_PRESETS.find((f) => f.id === report.formatId);
+    const format = findAnyFormat(report.formatId);
     if (!format || report.fits) return [];
     if (report.problems.length === 0) {
       return [issue('blocking', format, null, "text doesn't fit at minimum size", 'shorten the longest fields')];

@@ -23,7 +23,7 @@ describe('file names', () => {
 
 describe('project file', () => {
   it('wraps the event with a kind and version', () => {
-    const file = toProjectFile(sampleEvent(), new Date('2026-10-21T12:00:00Z'));
+    const file = toProjectFile(sampleEvent(), [], new Date('2026-10-21T12:00:00Z'));
     expect(file).toMatchObject({ kind: 'zsr-signage-project', version: 1, savedAt: '2026-10-21T12:00:00.000Z' });
     expect(file.event.title).toBe('Halloween Game Night');
   });

@@ -4,22 +4,44 @@ import { FormProvider, useForm } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { ErrorSummary, summarizeErrors, type SummaryItem } from './components/ErrorSummary';
 import { ExportBar } from './components/ExportBar';
+import { ProjectBar } from './components/ProjectBar';
+import { fieldId } from './components/fields';
 import { useExporter } from './components/useExporter';
 import { EventForm } from './components/EventForm';
 import { PreviewGrid } from './components/PreviewGrid';
 import { WarningsPanel } from './components/WarningsPanel';
 import { contentIssues, fitIssues } from './lib/checks';
 import type { FitReport } from './templates/TemplateRenderer';
-import { FORMAT_PRESETS, type FileType, type FormatPreset } from './config/formats';
+import type { FileType, FormatPreset } from './config/formats';
+import { allFormats, customFormats, mergeCustomFormats, useFormats } from './lib/formatStore';
+import { downloadText } from './lib/download';
+import { duplicateEvent, parseProject, parseProjectText, projectFileName, projectJson, toProjectFile } from './lib/project';
 import { PREVIEW_DEBOUNCE_MS } from './config/limits';
 import { useDebouncedValues } from './lib/useDebouncedValues';
-import { loadFormatIds, saveFormatIds } from './lib/storage';
-import { sampleEvent } from './schema/defaults';
+import { loadAutosave, loadFormatIds, saveAutosave, saveFormatIds } from './lib/storage';
+import { blankEvent, sampleEvent } from './schema/defaults';
 import { eventSchema, type EventData } from './schema/event';
 
+/** Drops formats that no longer exist (a custom preset may have been removed since saving). */
+function knownFormats(event: EventData): EventData {
+  const known = allFormats();
+  return { ...event, formatIds: event.formatIds.filter((id) => known.some((f) => f.id === id)) };
+}
+
+/** The autosaved project if there is one; the sample event on a first visit. */
+function initialEvent(): EventData {
+  const saved = parseProject(loadAutosave());
+  if (saved.ok) {
+    mergeCustomFormats(saved.customFormats);
+    return knownFormats(saved.event);
+  }
+  return sampleEvent(loadFormatIds() ?? undefined);
+}
+
 export function App() {
+  const [initial] = useState(initialEvent);
   const methods = useForm<EventData>({
-    defaultValues: sampleEvent(loadFormatIds() ?? undefined),
+    defaultValues: initial,
     resolver: zodResolver(eventSchema),
     mode: 'onChange',
     // Focus goes to the error summary instead, which links to each field.
@@ -33,6 +55,9 @@ export function App() {
   const [fitReports, setFitReports] = useState<Record<string, FitReport>>({});
   const [screenType, setScreenType] = useState<'png' | 'jpg'>('png');
   const exporter = useExporter(setAnnouncement);
+  const formats = useFormats();
+  const [autosaveOk, setAutosaveOk] = useState(true);
+  const [projectStatus, setProjectStatus] = useState('');
 
   const onFit = useCallback((report: FitReport) => {
     setFitReports((prev) =>
@@ -44,11 +69,48 @@ export function App() {
     const ids = Array.isArray(preview.formatIds) ? preview.formatIds : [];
     const reports = ids.map((id) => fitReports[id]).filter((r): r is FitReport => Boolean(r));
     return [...fitIssues(reports), ...contentIssues(preview, ids)];
-  }, [preview, fitReports]);
+    // contentIssues reads the format store, so custom presets are a dependency too.
+  }, [preview, fitReports, formats]);
 
+  // Autosave every change (debounced with the preview).
   useEffect(() => {
     if (Array.isArray(preview.formatIds) && preview.formatIds.length) saveFormatIds(preview.formatIds);
+    setAutosaveOk(saveAutosave(toProjectFile(preview, customFormats())));
   }, [preview]);
+
+  /** Replaces the working event, e.g. new, duplicate or open. */
+  const load = (event: EventData, message: string, focusTitle = true) => {
+    methods.reset(knownFormats(event));
+    setSummary([]);
+    setFitReports({});
+    setProjectStatus(message);
+    setAnnouncement(message);
+    if (focusTitle) requestAnimationFrame(() => document.getElementById(fieldId('title'))?.focus());
+  };
+
+  const startNew = () => load(blankEvent(methods.getValues('formatIds')), 'Started a new event.');
+
+  const duplicate = () =>
+    load(duplicateEvent(methods.getValues()), 'Duplicated: kept the template, theme, logos and accommodations line.');
+
+  const saveProject = () => {
+    const event = methods.getValues();
+    downloadText(projectJson(event, customFormats()), projectFileName(event), 'application/json');
+    const message = `Saved ${projectFileName(event)}.`;
+    setProjectStatus(message);
+    setAnnouncement(message);
+  };
+
+  const openProject = async (file: File) => {
+    const parsed = parseProjectText(await file.text());
+    if (!parsed.ok) {
+      setProjectStatus(parsed.error);
+      setAnnouncement(parsed.error);
+      return;
+    }
+    mergeCustomFormats(parsed.customFormats);
+    load(parsed.event, `Opened ${file.name}.`, false);
+  };
 
   useEffect(() => {
     if (checks > 0) summaryRef.current?.focus();
@@ -83,7 +145,7 @@ export function App() {
     withValidData((data) =>
       exporter.run(
         data,
-        FORMAT_PRESETS.filter((f) => data.formatIds.includes(f.id)).map((format) => ({
+        formats.filter((f) => data.formatIds.includes(f.id)).map((format) => ({
           format,
           types: [format.dpi ? 'pdf' : screenType],
         })),
@@ -102,6 +164,14 @@ export function App() {
       <header className="app-header">
         <h1>Signage Builder</h1>
         <p>Fill in the event once; every format updates together.</p>
+        <ProjectBar
+          autosaveOk={autosaveOk}
+          status={projectStatus}
+          onNew={startNew}
+          onDuplicate={duplicate}
+          onSave={saveProject}
+          onOpen={(file) => void openProject(file)}
+        />
       </header>
       <main className="app-main">
         <form className="panel form-panel" noValidate onSubmit={check} aria-labelledby="form-heading">

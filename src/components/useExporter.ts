@@ -3,6 +3,7 @@ import type { FileType, FormatPreset } from '../config/formats';
 import { exportAltText } from '../lib/altText';
 import { contentIssues, fitIssues, type Issue } from '../lib/checks';
 import { exportFileName, zipFileName } from '../lib/filenames';
+import { customFormats } from '../lib/formatStore';
 import { projectJson } from '../lib/project';
 import type { EventData } from '../schema/event';
 
@@ -119,7 +120,7 @@ export function useExporter(announce: (message: string) => void) {
           const alt = exportAltText(event);
           const zip = await zipFiles([
             ...files,
-            { name: 'event.json', data: new Blob([projectJson(event)], { type: 'application/json' }) },
+            { name: 'event.json', data: new Blob([projectJson(event, customFormats())], { type: 'application/json' }) },
             { name: 'alt-text.txt', data: new Blob([files.map((f) => `${f.name}: ${alt}`).join('\n') + '\n']) },
           ]);
           downloadBlob(zip, zipFileName(event));

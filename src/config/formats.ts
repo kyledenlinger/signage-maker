@@ -71,6 +71,30 @@ export function findFormat(id: string): FormatPreset | undefined {
   return FORMAT_PRESETS.find((f) => f.id === id);
 }
 
+/** Size limits for custom presets, in px. */
+export const CUSTOM_SIZE_PX = { min: 200, max: 8000 };
+
+export interface CustomFormatInput {
+  name: string;
+  width: number;
+  height: number;
+  orientation: OrientationClass;
+}
+
+/** The orientation class a size most likely belongs to. */
+export function suggestOrientation(width: number, height: number): OrientationClass {
+  if (width === height) return 'square';
+  return width > height ? 'landscape' : 'portrait';
+}
+
+/** A custom screen preset: 5% safe zone, PNG and JPG, like the built-in screen presets. */
+export function customFormat(input: CustomFormatInput, idSlug: string): FormatPreset {
+  return {
+    ...screen(`custom-${idSlug}`, input.name.trim(), input.width, input.height, input.orientation),
+    custom: true,
+  };
+}
+
 /** Canvas unit: 1% of the shorter edge, in px. */
 export function canvasUnit(format: Pick<FormatPreset, 'width' | 'height'>): number {
   return Math.min(format.width, format.height) / 100;

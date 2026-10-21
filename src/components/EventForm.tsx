@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
-import { FORMAT_PRESETS } from '../config/formats';
 import { FIELD_LIMITS, MAX_HIGHLIGHTS, MAX_LOGOS } from '../config/limits';
 import { THEMES } from '../config/themes';
+import { useFormats } from '../lib/formatStore';
 import { readImageFile } from '../lib/image';
+import { CustomSizes } from './CustomSizes';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { FocalPointPicker } from './FocalPointPicker';
@@ -246,35 +247,39 @@ function FormatsField() {
   const { register, formState } = useFormContext<EventData>();
   const id = fieldId('formatIds');
   const error = errorAt(formState.errors, 'formatIds');
+  const formats = useFormats();
   return (
-    <fieldset
-      className="field fieldset"
-      id={id}
-      tabIndex={-1}
-      aria-describedby={[`${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ')}
-    >
-      <legend>
-        Formats<span className="req"> (required)</span>
-      </legend>
-      <p className="hint" id={`${id}-hint`}>
-        Your choice is remembered next time.
-      </p>
-      <div className="check-grid">
-        {FORMAT_PRESETS.map((f) => (
-          <div className="field--check" key={f.id}>
-            <input id={`${id}-${f.id}`} type="checkbox" value={f.id} {...register('formatIds')} />
-            <label htmlFor={`${id}-${f.id}`}>
-              {f.name} <span className="muted">{f.width} × {f.height}</span>
-            </label>
-          </div>
-        ))}
-      </div>
-      {error && (
-        <p className="field-error" id={`${id}-error`}>
-          {error}
+    <>
+      <fieldset
+        className="field fieldset"
+        id={id}
+        tabIndex={-1}
+        aria-describedby={[`${id}-hint`, error && `${id}-error`].filter(Boolean).join(' ')}
+      >
+        <legend>
+          Formats<span className="req"> (required)</span>
+        </legend>
+        <p className="hint" id={`${id}-hint`}>
+          Your choice is remembered next time.
         </p>
-      )}
-    </fieldset>
+        <div className="check-grid">
+          {formats.map((f) => (
+            <div className="field--check" key={f.id}>
+              <input id={`${id}-${f.id}`} type="checkbox" value={f.id} {...register('formatIds')} />
+              <label htmlFor={`${id}-${f.id}`}>
+                {f.name} <span className="muted">{f.width} × {f.height}</span>
+              </label>
+            </div>
+          ))}
+        </div>
+        {error && (
+          <p className="field-error" id={`${id}-error`}>
+            {error}
+          </p>
+        )}
+      </fieldset>
+      <CustomSizes />
+    </>
   );
 }
 

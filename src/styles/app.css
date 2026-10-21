@@ -516,3 +516,53 @@ button {
   padding: 0.25rem 0.6rem;
   font-size: 0.9rem;
 }
+
+.custom-sizes {
+  margin: 0 0 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 0.75rem;
+}
+.custom-sizes summary {
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 1.75rem;
+}
+.custom-list {
+  padding-left: 1.25rem;
+}
+.custom-form {
+  margin-top: 0.5rem;
+}
+.custom-status {
+  margin: 0.5rem 0 0;
+}
+
+.project-bar {
+  margin-top: 0.75rem;
+}
+.project-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.project-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.project-confirm p {
+  flex: 1 1 100%;
+  margin: 0;
+}
+.project-status {
+  margin: 0.5rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}

@@ -121,7 +121,8 @@ export function TemplateRenderer({ event, theme, format, onFit }: Props) {
   const run = useCallback(() => {
     const host = hostRef.current;
     const root = host?.firstElementChild as HTMLElement | null;
-    if (!host || !root) return;
+    // Geometry is read on screen; a preview scaled to nothing (not yet laid out) can't be measured.
+    if (!host || !root || root.getBoundingClientRect().width === 0) return;
     const unit = canvasUnit(format);
     const slack = Math.max(2, unit);
     const overflowing = () => overflowingRegions(root, format.safeZone, slack);
