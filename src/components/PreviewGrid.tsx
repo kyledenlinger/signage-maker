@@ -3,9 +3,14 @@ import { FORMAT_PRESETS, type FormatPreset } from '../config/formats';
 import { findTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
 import type { EventData } from '../schema/event';
-import { findTemplate } from '../templates/registry';
+import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
 
-export function PreviewGrid({ event }: { event: EventData }) {
+interface Props {
+  event: EventData;
+  onFit: (report: FitReport) => void;
+}
+
+export function PreviewGrid({ event, onFit }: Props) {
   const formats = FORMAT_PRESETS.filter((f) => event.formatIds.includes(f.id));
   if (formats.length === 0) {
     return <p className="preview-empty">Choose at least one format to see a preview.</p>;
@@ -14,18 +19,17 @@ export function PreviewGrid({ event }: { event: EventData }) {
     <ul className="preview-grid">
       {formats.map((f) => (
         <li key={f.id}>
-          <PreviewCard event={event} format={f} />
+          <PreviewCard event={event} format={f} onFit={onFit} />
         </li>
       ))}
     </ul>
   );
 }
 
-function PreviewCard({ event, format }: { event: EventData; format: FormatPreset }) {
+function PreviewCard({ event, format, onFit }: { event: EventData; format: FormatPreset; onFit: Props['onFit'] }) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
-  const { Component } = findTemplate(event.templateId);
-  const theme = findTheme(event.themeId);
+  const [fits, setFits] = useState(true);
 
   useEffect(() => {
     const el = frameRef.current;
@@ -37,12 +41,13 @@ function PreviewCard({ event, format }: { event: EventData; format: FormatPreset
 
   const scale = width / format.width;
   return (
-    <figure className="preview-card" data-format={format.id}>
+    <figure className="preview-card" data-format={format.id} data-fits={fits}>
       <figcaption>
         <strong>{format.name}</strong>{' '}
         <span className="muted">
           {format.width} × {format.height}
         </span>
+        {!fits && <span className="preview-flag"> · text doesn’t fit</span>}
       </figcaption>
       <div
         ref={frameRef}
@@ -51,11 +56,17 @@ function PreviewCard({ event, format }: { event: EventData; format: FormatPreset
         aria-label={previewAltText(event, format)}
         style={{ aspectRatio: `${format.width} / ${format.height}` }}
       >
-        {width > 0 && (
-          <div className="preview-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-            <Component event={event} theme={theme} format={format} />
-          </div>
-        )}
+        <div className="preview-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
+          <TemplateRenderer
+            event={event}
+            theme={findTheme(event.themeId)}
+            format={format}
+            onFit={(report) => {
+              setFits(report.fits);
+              onFit(report);
+            }}
+          />
+        </div>
       </div>
     </figure>
   );

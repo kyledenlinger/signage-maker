@@ -1,0 +1,65 @@
+/* Band template. The photo is full-bleed; all text sits on the solid band. */
+
+.bd-photo {
+  position: absolute;
+  inset: 0;
+}
+
+.bd-band {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  min-height: var(--bd-band);
+  max-height: calc(100% - var(--photo-min));
+  background: var(--c-panel);
+  display: grid;
+  gap: var(--gap);
+  padding: var(--gap) var(--safe-x) var(--safe-y);
+}
+.bd--plain .bd-band {
+  height: 100%;
+  max-height: none;
+  padding-top: var(--safe-y);
+}
+
+.bd-head {
+  grid-area: head;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+}
+.bd-details {
+  grid-area: details;
+}
+.bd-qr {
+  grid-area: qr;
+  align-self: safe end;
+  justify-self: end;
+}
+.bd-footer {
+  grid-area: footer;
+  align-self: safe end;
+}
+
+/* Landscape: title and date left, details middle, QR right, logos bottom-left. */
+.bd--wide .bd-band {
+  grid-template-columns: 5fr 4fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'head details qr'
+    'footer details qr';
+}
+.bd--wide .bd-details {
+  justify-content: safe flex-end;
+}
+
+/* Portrait and square: stacked. */
+.bd--tall .bd-band {
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto minmax(min-content, 1fr) auto;
+  grid-template-areas:
+    'head head'
+    'details qr'
+    'footer qr';
+}

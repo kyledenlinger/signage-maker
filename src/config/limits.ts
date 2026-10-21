@@ -52,6 +52,8 @@ export const IMAGE_PX = {
   warnBelow: 1920,
   blockBelowForHiRes: 1000,
   downscaleAbove: 4000,
+  /** Formats with a long edge at least this big count as high-res, like print presets. */
+  hiResFormatEdge: 3840,
 };
 
 export const QR_RULES = {

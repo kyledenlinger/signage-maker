@@ -1,35 +1,8 @@
 import { forwardRef } from 'react';
 import type { FieldErrors } from 'react-hook-form';
 import { FIELD_ORDER, type EventData } from '../schema/event';
+import { FIELD_LABELS as LABELS } from '../schema/labels';
 import { errorAt, fieldId } from './fields';
-
-const LABELS: Record<keyof EventData, string> = {
-  title: 'Title',
-  subtitle: 'Subtitle',
-  date: 'Date',
-  dateStyle: 'Date style',
-  startTime: 'Start time',
-  endTime: 'End time',
-  recurringNote: 'Multi-day or recurring note',
-  location: 'Location',
-  description: 'Description',
-  highlights: 'Highlights',
-  callToAction: 'Call to action',
-  url: 'Web address',
-  displayUrl: 'Display URL',
-  showQr: 'QR code',
-  image: 'Photo',
-  imageDescription: 'Photo description',
-  imageCredit: 'Photo credit',
-  illustration: 'Illustration',
-  showLockup: 'Lockup',
-  logos: 'Additional logos',
-  showAccommodations: 'Accommodations',
-  accommodations: 'Accommodations line',
-  templateId: 'Template',
-  themeId: 'Theme',
-  formatIds: 'Formats',
-};
 
 export interface SummaryItem {
   id: string;

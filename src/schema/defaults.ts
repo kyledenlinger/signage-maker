@@ -21,6 +21,7 @@ export function blankEvent(formatIds: string[] = DEFAULT_FORMAT_IDS): EventData 
     displayUrl: '',
     showQr: true,
     image: null,
+    imageFocus: { x: 0.5, y: 0.5 },
     imageDescription: '',
     imageCredit: '',
     illustration: null,

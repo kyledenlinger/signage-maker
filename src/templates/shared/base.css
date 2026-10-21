@@ -1,0 +1,171 @@
+/* Shared signage styles. Sizes come from custom properties set by vars.ts and the text fitter. */
+
+.tpl {
+  box-sizing: border-box;
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  overflow: hidden;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  font-weight: 400;
+  line-height: var(--lh-body);
+  text-align: left;
+  -webkit-font-smoothing: antialiased;
+}
+.tpl *,
+.tpl *::before,
+.tpl *::after {
+  box-sizing: border-box;
+}
+.tpl [data-fit-region],
+.tpl > * {
+  min-width: 0;
+  min-height: 0;
+}
+/* QR codes and footers never shrink; rows holding a QR size to it (minmax(min-content, 1fr)). */
+.tpl .t-qr,
+.tpl .t-footer {
+  min-width: auto;
+  min-height: auto;
+}
+
+.t-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-title);
+  font-weight: 700;
+  line-height: var(--lh-display);
+  color: var(--c-title);
+  max-width: var(--title-measure);
+  /* Break only between words: a word too wide for the column counts as overflow. */
+  text-wrap: balance;
+}
+
+.t-date {
+  font-family: var(--font-display);
+  font-size: var(--fs-date);
+  font-weight: 700;
+  line-height: var(--lh-display);
+  color: var(--c-title);
+  display: flex;
+  flex-direction: column;
+}
+.t-date[data-field='date'] {
+  white-space: nowrap;
+}
+.t-date-month {
+  /* Smaller than the day, but never below time and location. */
+  font-size: max(calc(var(--fs-date) * var(--date-month-scale, 0.6)), var(--fs-timeLocation));
+}
+
+.t-details {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+}
+.t-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+.t-emphasis {
+  font-size: var(--fs-timeLocation);
+  font-weight: 700;
+  line-height: var(--lh-display);
+  color: var(--c-emphasis);
+}
+.t-highlights {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 0.6em;
+}
+.t-highlights li:not(:last-child)::after {
+  content: ' ·';
+}
+.t-cta {
+  font-weight: 700;
+}
+.t-url {
+  overflow-wrap: anywhere;
+}
+
+.t-footer {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap) / 2);
+}
+.t-footer--row {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: var(--gap);
+}
+/* Small print wraps beside the logos rather than pushing past the edge. */
+.t-footer--row .t-small {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.t-footer--row .t-logos {
+  flex: none;
+}
+.t-small {
+  font-size: var(--fs-smallPrint);
+  line-height: var(--lh-body);
+  color: var(--c-muted);
+}
+.t-logos {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+}
+.t-logos img,
+.t-logos svg {
+  height: 100%;
+  width: auto;
+}
+
+.t-qr-tile {
+  background: var(--c-qr-tile);
+  border: var(--qr-tile-border) solid var(--c-qr-frame);
+  border-radius: var(--qr-tile-radius);
+  padding: var(--qr-tile-pad);
+  width: max-content;
+}
+
+.t-photo {
+  position: relative;
+  overflow: hidden;
+}
+.t-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.t-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+}
+.t-illustration img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.t-accent-bar {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--accent-bar);
+  background: var(--c-accent);
+}

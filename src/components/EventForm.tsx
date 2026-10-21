@@ -6,6 +6,7 @@ import { THEMES } from '../config/themes';
 import { readImageFile } from '../lib/image';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
+import { FocalPointPicker } from './FocalPointPicker';
 import { CheckboxField, errorAt, fieldId, ImageField, Section, SelectField, TextField } from './fields';
 
 export function EventForm() {
@@ -81,6 +82,7 @@ export function EventForm() {
           hint="JPG, PNG or WebP. At least 1920 px on the long edge is best."
           checkResolution
         />
+        <PhotoFocus />
         <TextField
           name="imageDescription"
           label="Photo description"
@@ -274,4 +276,10 @@ function FormatsField() {
       )}
     </fieldset>
   );
+}
+
+function PhotoFocus() {
+  const { control } = useFormContext<EventData>();
+  const image = useWatch({ control, name: 'image' });
+  return image ? <FocalPointPicker image={image} /> : null;
 }

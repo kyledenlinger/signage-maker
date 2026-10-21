@@ -1,0 +1,51 @@
+/* Split template. The photo bleeds to the edges; the text panel keeps to the safe zone. */
+
+.sp {
+  display: grid;
+}
+.sp--side.sp--photo {
+  grid-template-columns: var(--sp-photo) 1fr;
+}
+.sp--top.sp--photo {
+  grid-template-rows: minmax(var(--photo-min), var(--sp-photo)) minmax(min-content, 1fr);
+}
+.sp--plain {
+  grid-template: 1fr / 1fr;
+}
+
+.sp-panel {
+  background: var(--c-panel);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto minmax(min-content, 1fr) auto;
+  grid-template-areas:
+    'title title'
+    'date date'
+    'details qr'
+    'footer footer';
+  gap: var(--gap);
+  padding: var(--safe-y) var(--safe-x);
+}
+.sp--side.sp--photo .sp-panel {
+  padding-left: calc(var(--gap) * 2);
+}
+.sp--top.sp--photo .sp-panel {
+  padding-top: var(--gap);
+}
+
+.sp-title {
+  grid-area: title;
+}
+.sp-date {
+  grid-area: date;
+}
+.sp-details {
+  grid-area: details;
+}
+.sp-qr {
+  grid-area: qr;
+  align-self: safe end;
+}
+.sp-footer {
+  grid-area: footer;
+}

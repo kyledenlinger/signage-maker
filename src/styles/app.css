@@ -351,3 +351,92 @@ button {
 .preview-empty {
   color: var(--text-muted);
 }
+
+.preview-flag {
+  color: var(--error);
+  font-weight: 700;
+}
+
+.warnings {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.warnings h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.25rem;
+}
+.warnings-ok,
+.warnings-count {
+  margin: 0;
+  color: var(--text-muted);
+}
+.warnings ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.25rem;
+}
+.warning-item button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-left: 4px solid var(--warning);
+  padding: 0.25rem 0.5rem;
+  color: var(--text);
+}
+.warning-item.is-blocking button {
+  border-left-color: var(--error);
+}
+.warning-item button:hover {
+  text-decoration: underline;
+}
+.warning-severity {
+  font-weight: 700;
+}
+.warning-item.is-blocking .warning-severity {
+  color: var(--error);
+}
+.warning-item.is-warning .warning-severity {
+  color: var(--warning);
+}
+
+.focal-thumb {
+  position: relative;
+  margin-top: 0.5rem;
+  cursor: crosshair;
+  line-height: 0;
+}
+.focal-thumb img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.focal-marker {
+  position: absolute;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: -0.75rem 0 0 -0.75rem;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow:
+    0 0 0 2px #000000,
+    inset 0 0 0 2px #000000;
+  pointer-events: none;
+}
+.focal-sliders {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.focal-slider label {
+  display: block;
+}
+.focal-slider input {
+  width: 100%;
+  accent-color: var(--accent);
+}

@@ -1,0 +1,50 @@
+/* Frame template. The photo is inset inside the safe zone with a theme-colored border. */
+
+.fr {
+  padding: var(--safe-y) var(--safe-x);
+  display: grid;
+  gap: calc(var(--gap) * 1.5);
+}
+.fr--side {
+  grid-template-columns: var(--fr-photo) 1fr;
+}
+.fr--top {
+  grid-template-rows: minmax(var(--photo-min), var(--fr-photo)) minmax(min-content, 1fr);
+}
+
+.fr-frame {
+  border: var(--fr-border) solid var(--c-accent);
+  display: grid;
+}
+.fr-photo {
+  min-height: 0;
+}
+
+.fr-text {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto minmax(min-content, 1fr) auto;
+  grid-template-areas:
+    'title title'
+    'date date'
+    'details qr'
+    'footer qr';
+  gap: var(--gap);
+}
+.fr-title {
+  grid-area: title;
+}
+.fr-date {
+  grid-area: date;
+}
+.fr-details {
+  grid-area: details;
+}
+.fr-qr {
+  grid-area: qr;
+  align-self: safe end;
+}
+.fr-footer {
+  grid-area: footer;
+  align-self: safe end;
+}

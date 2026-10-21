@@ -46,6 +46,8 @@ export const eventSchema = z
     displayUrl: text(FIELD_LIMITS.displayUrl),
     showQr: z.boolean(),
     image: imageAssetSchema.nullable(),
+    /** Point to keep in view when the photo is cropped, 0–1 from the left and top. */
+    imageFocus: z.object({ x: z.number().min(0).max(1), y: z.number().min(0).max(1) }),
     imageDescription: text(FIELD_LIMITS.imageDescription),
     imageCredit: text(FIELD_LIMITS.imageCredit),
     illustration: imageAssetSchema.nullable(),
@@ -100,6 +102,7 @@ export const FIELD_ORDER: (keyof EventData)[] = [
   'displayUrl',
   'showQr',
   'image',
+  'imageFocus',
   'imageDescription',
   'imageCredit',
   'illustration',

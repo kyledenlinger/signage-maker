@@ -1,35 +1,34 @@
-/* Showcase template. Every size comes from custom properties set in Showcase.tsx. */
+/* Showcase template. */
 
 .sc {
-  box-sizing: border-box;
-  position: relative;
-  width: var(--w);
-  height: var(--h);
-  overflow: hidden;
   padding: var(--safe-y) var(--safe-x);
-  background: var(--c-bg);
-  color: var(--c-text);
-  font-family: var(--font-body);
-  font-size: var(--fs-body);
-  line-height: var(--lh-body);
-  text-align: left;
   display: grid;
   grid-template-columns: var(--sc-cols);
-  gap: var(--sc-gap);
+  gap: var(--gap);
 }
 
-.sc *,
-.sc *::before,
-.sc *::after {
-  box-sizing: border-box;
+.sc-title {
+  grid-area: title;
+}
+.sc-date {
+  grid-area: date;
+}
+.sc-art {
+  grid-area: art;
+}
+.sc-qr {
+  grid-area: qr;
+  justify-self: end;
+}
+.sc-details {
+  grid-area: details;
+}
+.sc-footer {
+  grid-area: footer;
+  align-self: safe end;
 }
 
-.sc > * {
-  min-width: 0;
-  min-height: 0;
-}
-
-/* Landscape */
+/* Landscape: title top-left, big date center, QR top-right, details column right, logo bottom-left. */
 .sc--landscape {
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
@@ -44,13 +43,13 @@
     'footer footer details';
 }
 .sc--landscape .sc-date {
-  align-self: center;
+  align-self: safe center;
 }
 .sc--landscape .sc-details {
-  align-self: end;
+  justify-content: safe flex-end;
 }
 
-/* Portrait and square */
+/* Portrait and square: title, illustration band with QR beside it, stacked date beside details. */
 .sc--portrait {
   grid-template-rows: auto 1fr auto;
   grid-template-areas:
@@ -59,7 +58,7 @@
     'footer footer qr';
 }
 .sc--portrait.sc--art {
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto minmax(min-content, 1fr) auto auto;
   grid-template-areas:
     'title title title'
     'art art qr'
@@ -67,121 +66,15 @@
     'footer footer footer';
 }
 .sc--portrait .sc-qr {
-  align-self: end;
-}
-/* Without an illustration, the date and details sit in the middle of the open space. */
-.sc--portrait:not(.sc--art) .sc-date,
-.sc--portrait:not(.sc--art) .sc-details {
-  align-self: center;
+  align-self: safe end;
 }
 .sc--portrait.sc--art .sc-qr {
-  align-self: center;
+  align-self: safe center;
 }
-
-/* Slots */
-.sc-title {
-  grid-area: title;
-  font-family: var(--font-display);
-  font-size: var(--fs-title);
-  font-weight: 700;
-  line-height: var(--lh-display);
-  color: var(--c-title);
-  text-wrap: balance;
-  overflow-wrap: break-word;
+/* Without art, the date and details sit in the middle of the open space. */
+.sc--portrait:not(.sc--art) .sc-details {
+  justify-content: safe center;
 }
-
-.sc-date {
-  grid-area: date;
-  font-family: var(--font-display);
-  font-size: var(--fs-date);
-  font-weight: 700;
-  line-height: var(--lh-display);
-  color: var(--c-title);
-  display: flex;
-  flex-direction: column;
-}
-.sc-date-month {
-  font-size: calc(var(--fs-date) * var(--sc-month-scale));
-}
-
-.sc-art {
-  grid-area: art;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.sc-art img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-}
-.sc-art--photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.sc-qr {
-  grid-area: qr;
-  justify-self: end;
-}
-.sc-qr-tile {
-  background: var(--c-qr-tile);
-  border: var(--sc-tile-border) solid var(--c-qr-frame);
-  border-radius: var(--sc-tile-radius);
-  padding: var(--sc-tile-pad);
-}
-
-.sc-details {
-  grid-area: details;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--sc-gap) / 2);
-}
-.sc-body {
-  font-size: var(--fs-body);
-}
-.sc-emphasis {
-  font-size: var(--fs-timeLocation);
-  font-weight: 700;
-  line-height: var(--lh-display);
-  color: var(--c-emphasis);
-}
-.sc-highlights {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  column-gap: 0.6em;
-}
-.sc-highlights li:not(:last-child)::after {
-  content: ' ·';
-}
-.sc-cta {
-  font-weight: 700;
-}
-
-.sc-footer {
-  grid-area: footer;
-  align-self: end;
-  display: flex;
-  flex-direction: column;
-  gap: calc(var(--sc-gap) / 2);
-}
-.sc-small {
-  font-size: var(--fs-smallPrint);
-  color: var(--c-muted);
-}
-.sc-logos {
-  display: flex;
-  align-items: center;
-  gap: var(--sc-gap);
-  height: var(--sc-logo-h);
-}
-.sc-logos img,
-.sc-logos svg {
-  height: 100%;
-  width: auto;
+.sc--portrait:not(.sc--art) .sc-date {
+  align-self: safe center;
 }
