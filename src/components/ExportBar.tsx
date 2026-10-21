@@ -1,3 +1,4 @@
+import type { Issue } from '../lib/checks';
 import type { ExportState, RowStatus } from './useExporter';
 
 const STATUS_TEXT: Record<RowStatus, string> = {
@@ -13,9 +14,12 @@ interface Props {
   screenType: 'png' | 'jpg';
   onScreenTypeChange: (type: 'png' | 'jpg') => void;
   onExportAll: () => void;
+  issues: Issue[];
 }
 
-export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll }: Props) {
+export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll, issues }: Props) {
+  const blocking = issues.filter((i) => i.severity === 'blocking').length;
+  const warnings = issues.length - blocking;
   return (
     <section className="export-bar" aria-labelledby="export-heading">
       <h3 id="export-heading">Export</h3>
@@ -47,6 +51,16 @@ export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll }
         </button>
       </div>
       <p className="hint">Print formats download as PDF. The zip also holds event.json and alt-text.txt.</p>
+      <p className={`export-readability ${blocking ? 'is-blocking' : ''}`}>
+        {issues.length === 0 ? (
+          'Readability check: no problems found.'
+        ) : (
+          <>
+            Readability check: {blocking} {blocking === 1 ? 'problem blocks' : 'problems block'} export, {warnings}{' '}
+            {warnings === 1 ? 'warning' : 'warnings'}. <a href="#warnings-heading">See details</a>
+          </>
+        )}
+      </p>
       {state.rows.length > 0 && (
         <ul className="export-rows">
           {state.rows.map((row) => (

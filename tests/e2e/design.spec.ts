@@ -250,3 +250,24 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
   }
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 });
+
+test('design options sit in one panel directly above the previews; it can collapse', async ({ page }) => {
+  const design = page.locator('details.design');
+  for (const label of ['Template (required)', 'Theme (required)', 'Title font', 'Date style', 'Weekday', 'Highlights style', 'Logo version', 'Co-sponsor logos']) {
+    await expect(design.getByLabel(label)).toBeVisible();
+  }
+  await expect(design.getByRole('group', { name: /Formats/ })).toBeVisible();
+  // None of them are left in the event form.
+  await expect(page.locator('form.form-panel select, form.form-panel input[type="file"][multiple]')).toHaveCount(0);
+
+  // The previews follow the panel directly.
+  const designBottom = await design.evaluate((el) => el.getBoundingClientRect().bottom);
+  const gridTop = await page.locator('.preview-grid').evaluate((el) => el.getBoundingClientRect().top);
+  expect(gridTop - designBottom).toBeLessThan(80);
+
+  await design.locator('> summary').click();
+  await expect(design.getByLabel('Template (required)')).toBeHidden();
+  await page.reload();
+  await expect(page.locator('details.design')).not.toHaveAttribute('open', '');
+  expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+});

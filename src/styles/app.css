@@ -608,3 +608,72 @@ button {
   width: auto;
   height: auto;
 }
+
+.export-readability {
+  margin: 0.5rem 0 0;
+}
+.export-readability.is-blocking {
+  color: var(--error);
+  font-weight: 700;
+}
+.export-readability a {
+  color: inherit;
+}
+
+.design {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+.design[open] {
+  padding-bottom: 0.25rem;
+}
+.design > summary {
+  cursor: pointer;
+  padding: 0.25rem 0;
+  list-style-position: inside;
+}
+.design > summary h3 {
+  display: inline;
+  font-size: 1.05rem;
+  margin: 0;
+}
+.design-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  gap: 0.5rem 1.25rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+.design-group h4 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+  color: var(--text-muted);
+}
+.design-group .field {
+  margin-bottom: 0.6rem;
+}
+.design-group .hint,
+.design-group .font-sample {
+  font-size: 0.85rem;
+}
+.design-group .fieldset {
+  padding: 0.25rem 0.5rem 0.5rem;
+}
+.design-group .field--check {
+  margin-bottom: 0.2rem;
+}
+.design-group .logo-preview {
+  padding: 0.4rem;
+}
+.design-group .logo-preview img {
+  max-height: 2.5rem;
+}
+.preview-title {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+.warnings {
+  margin-top: 1rem;
+}

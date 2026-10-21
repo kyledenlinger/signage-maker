@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import type { FieldErrors } from 'react-hook-form';
 import { ErrorSummary, summarizeErrors, type SummaryItem } from './components/ErrorSummary';
+import { DesignPanel } from './components/DesignPanel';
 import { ExportBar } from './components/ExportBar';
 import { ProjectBar } from './components/ProjectBar';
 import { fieldId } from './components/fields';
@@ -159,7 +160,7 @@ export function App() {
   return (
     <FormProvider {...methods}>
       <a className="skip-link" href="#preview-heading">
-        Skip to preview
+        Skip to design and preview
       </a>
       <header className="app-header">
         <h1>Signage Builder</h1>
@@ -188,15 +189,17 @@ export function App() {
         </form>
         <section className="panel preview-panel" aria-labelledby="preview-heading">
           <h2 id="preview-heading" tabIndex={-1}>
-            Preview
+            Design and preview
           </h2>
           <ExportBar
             state={exporter.state}
             screenType={screenType}
             onScreenTypeChange={setScreenType}
             onExportAll={() => void exportAll()}
+            issues={issues}
           />
-          <WarningsPanel issues={issues} />
+          <DesignPanel />
+          <h3 className="preview-title">Preview</h3>
           <PreviewGrid
             event={preview}
             onFit={onFit}
@@ -204,6 +207,7 @@ export function App() {
             exporting={exporter.state.running}
             onDownload={(format, type) => void exportOne(format, type)}
           />
+          <WarningsPanel issues={issues} />
         </section>
       </main>
       <div className="visually-hidden" aria-live="polite" role="status">

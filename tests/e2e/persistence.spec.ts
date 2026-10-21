@@ -80,7 +80,7 @@ test('duplicate keeps template, theme, logos and accommodations; clears the even
     c.getContext('2d')!.fillRect(0, 0, 400, 100);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page.getByLabel('Additional logos').setInputFiles({ name: 'cosponsor.png', mimeType: 'image/png', buffer: Buffer.from(logo, 'base64') });
+  await page.getByLabel('Co-sponsor logos').setInputFiles({ name: 'cosponsor.png', mimeType: 'image/png', buffer: Buffer.from(logo, 'base64') });
   await expect(page.locator('.file-list')).toContainText('cosponsor.png');
 
   await page.getByRole('button', { name: 'Duplicate event' }).click();

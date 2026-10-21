@@ -28,7 +28,7 @@ export const FIELD_LABELS: Record<keyof EventData, string> = {
   lockupId: 'Logo version',
   lockupOrientation: 'Logo layout',
   lockupColorway: 'Logo color',
-  logos: 'Additional logos',
+  logos: 'Co-sponsor logos',
   showAccommodations: 'Accommodations',
   accommodations: 'Accommodations line',
   templateId: 'Template',

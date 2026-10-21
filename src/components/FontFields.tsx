@@ -6,10 +6,10 @@ import { fieldId } from './fields';
 /** Title and body font pickers, each with a sample in the chosen font. */
 export function FontFields() {
   return (
-    <div className="field-row">
+    <>
       <FontSelect name="fontTitle" label="Title font" sample="Halloween Game Night" weight={700} />
       <FontSelect name="fontBody" label="Body font" sample="Games · Pizza · Free and open to all" weight={400} />
-    </div>
+    </>
   );
 }
 

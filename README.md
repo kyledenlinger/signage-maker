@@ -12,7 +12,7 @@ Everything happens in your browser. Nothing you type or upload is sent anywhere.
    - **Background image:** fills the whole sign in Showcase and Type only, with every block of text on a solid panel over it. It has its own focal point.
    - **ZSR Library logo:** the approved WF | ZSR Library logo is on by default, as *Semiformal: Wake Forest ZSR Library*, horizontal. You can pick any approved version (Formal, Semiformal or Informal; with or without "Library"), horizontal or vertical. Its color (Color, Reverse, Gold, Black or White) is matched to the theme automatically so it stays readable; you can override it, and the panel warns if your pick is hard to see.
    - **More logos:** add up to three co-sponsor logos (SVG or PNG with a transparent background).
-3. **Choose a design.** Pick a template, a theme and the formats you need. Landscape HD, Portrait HD and Letter poster are selected to start; your choice is remembered.
+3. **Choose a design.** Everything about how the signs look is in the **Design** panel, right above the previews: template and formats, theme and fonts, date and highlight style, and logos. Landscape HD, Portrait HD and Letter poster are selected to start; your choice is remembered. Collapse the panel to keep the previews at the top.
 4. **Check the previews.** All selected formats update as you type. The **Readability check** panel lists anything to fix, as *format · field · problem · fix*. Click an item to jump to the field. Items marked **Blocks export** must be fixed before that format can download; **Warnings** are advice.
 5. **Download.**
    - **Download all selected (.zip)** gets every format in one file, plus `event.json` (the project, so you can reopen it) and `alt-text.txt` (ready-to-paste alt text for each file). Choose PNG or JPG for screen formats; print formats come as PDF.
@@ -59,7 +59,7 @@ Campus screens often show a slide for only about 10 seconds, so the panel warns 
 
 ## Custom sizes
 
-Under **Design → Custom sizes**, add a screen size that isn't listed: a name, width and height in pixels, and whether to lay it out as landscape, portrait or square. Custom sizes get a 5% safe margin, download as PNG or JPG, are remembered in this browser, and are saved in project files.
+In the **Design** panel, under **Custom sizes**, add a screen size that isn't listed: a name, width and height in pixels, and whether to lay it out as landscape, portrait or square. Custom sizes get a 5% safe margin, download as PNG or JPG, are remembered in this browser, and are saved in project files.
 
 ## Accessibility
 
