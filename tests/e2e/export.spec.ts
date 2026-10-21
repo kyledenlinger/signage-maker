@@ -142,7 +142,9 @@ test('chosen title and body fonts are embedded in the export', async ({ page }) 
   const exported = (await bytes(file)).toString('base64');
 
   const fonts = '&fontTitle=source-serif&fontBody=lexend';
-  expect(await rowProfileDiff(page, exported, await previewShot(page, '', fonts))).toBeLessThan(0.04);
+  // Linux Chromium renders these two fonts a little differently in the capture (4.1% there, under
+  // 2% on macOS); a wrong font differs by far more, as the control below checks.
+  expect(await rowProfileDiff(page, exported, await previewShot(page, '', fonts))).toBeLessThan(0.05);
   // Control: the default fonts look clearly different.
   expect(await rowProfileDiff(page, exported, await previewShot(page))).toBeGreaterThan(0.08);
 });
