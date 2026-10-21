@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { FORMAT_PRESETS, type FormatPreset } from '../config/formats';
+import { FORMAT_PRESETS, type FileType, type FormatPreset } from '../config/formats';
 import { findTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
 import type { EventData } from '../schema/event';
@@ -8,9 +8,13 @@ import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer'
 interface Props {
   event: EventData;
   onFit: (report: FitReport) => void;
+  /** Formats with a blocking issue. */
+  blockedIds: Set<string>;
+  exporting: boolean;
+  onDownload: (format: FormatPreset, type: FileType) => void;
 }
 
-export function PreviewGrid({ event, onFit }: Props) {
+export function PreviewGrid({ event, onFit, blockedIds, exporting, onDownload }: Props) {
   const formats = FORMAT_PRESETS.filter((f) => event.formatIds.includes(f.id));
   if (formats.length === 0) {
     return <p className="preview-empty">Choose at least one format to see a preview.</p>;
@@ -19,14 +23,26 @@ export function PreviewGrid({ event, onFit }: Props) {
     <ul className="preview-grid">
       {formats.map((f) => (
         <li key={f.id}>
-          <PreviewCard event={event} format={f} onFit={onFit} />
+          <PreviewCard
+            event={event}
+            format={f}
+            onFit={onFit}
+            blocked={blockedIds.has(f.id)}
+            exporting={exporting}
+            onDownload={onDownload}
+          />
         </li>
       ))}
     </ul>
   );
 }
 
-function PreviewCard({ event, format, onFit }: { event: EventData; format: FormatPreset; onFit: Props['onFit'] }) {
+interface CardProps extends Pick<Props, 'event' | 'onFit' | 'exporting' | 'onDownload'> {
+  format: FormatPreset;
+  blocked: boolean;
+}
+
+function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: CardProps) {
   const frameRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [fits, setFits] = useState(true);
@@ -47,7 +63,11 @@ function PreviewCard({ event, format, onFit }: { event: EventData; format: Forma
         <span className="muted">
           {format.width} × {format.height}
         </span>
-        {!fits && <span className="preview-flag"> · text doesn’t fit</span>}
+        {!fits ? (
+          <span className="preview-flag"> · text doesn’t fit</span>
+        ) : (
+          blocked && <span className="preview-flag"> · blocked</span>
+        )}
       </figcaption>
       <div
         ref={frameRef}
@@ -67,6 +87,25 @@ function PreviewCard({ event, format, onFit }: { event: EventData; format: Forma
             }}
           />
         </div>
+      </div>
+      <div className="card-actions">
+        <span className="card-actions-label" aria-hidden="true">
+          Download:
+        </span>
+        {format.fileTypes.map((type) => (
+          <button
+            key={type}
+            type="button"
+            className="button-secondary button-small"
+            aria-label={`Download ${type.toUpperCase()} of ${format.name}`}
+            aria-disabled={exporting || undefined}
+            onClick={() => {
+              if (!exporting) onDownload(format, type);
+            }}
+          >
+            {type.toUpperCase()}
+          </button>
+        ))}
       </div>
     </figure>
   );

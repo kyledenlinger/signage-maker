@@ -440,3 +440,79 @@ button {
   width: 100%;
   accent-color: var(--accent);
 }
+
+.export-bar {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.export-bar h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+}
+.export-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.5rem;
+  align-items: center;
+}
+.export-type {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.export-type legend {
+  float: left;
+  margin-right: 0.75rem;
+  font-weight: 700;
+}
+.export-type label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.export-type input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--accent);
+}
+.export-rows {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.2rem;
+}
+.export-rows .is-skipped,
+.export-rows .is-failed {
+  color: var(--error);
+}
+.export-message {
+  margin: 0.5rem 0 0;
+  font-weight: 700;
+}
+[aria-disabled='true'] {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.5rem;
+}
+.card-actions-label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.button-small {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.9rem;
+}
