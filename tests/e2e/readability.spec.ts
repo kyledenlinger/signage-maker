@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { fillAccommodations, selectFormat, statusBar } from './helpers';
+import { chooseTemplate, chooseTheme, fillAccommodations, selectFormat, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -87,9 +87,9 @@ test('clicking a warning focuses its field', async ({ page }) => {
 
 test('every template and theme renders the default formats', async ({ page }) => {
   for (const template of ['showcase', 'split', 'band', 'type-only', 'frame']) {
-    await page.getByLabel('Template (required)').selectOption(template);
+    await chooseTemplate(page, template);
     for (const theme of ['black-gold', 'athletics-gold', 'light', 'high-contrast']) {
-      await page.getByLabel('Theme (required)').selectOption(theme);
+      await chooseTheme(page, theme);
       for (const id of DEFAULT_FORMATS) {
         await expect(page.locator(`[data-format="${id}"] .tpl`)).toBeVisible();
         await expect(page.locator(`[data-format="${id}"]`)).toHaveAttribute('data-fits', 'true');
@@ -114,7 +114,7 @@ test('focal point moves with the keyboard and crops the photo', async ({ page })
     buffer: Buffer.from(png, 'base64'),
   });
   await page.getByLabel('Image description').fill('A blue square');
-  await page.getByLabel('Template (required)').selectOption('split');
+  await chooseTemplate(page, 'split');
 
   const slider = page.getByLabel(/Left to right/);
   await slider.focus();

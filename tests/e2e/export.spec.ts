@@ -3,6 +3,7 @@ import { expect, test, type Download, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
 import { fillAccommodations, selectFormat, statusBar } from './helpers';
+import { chooseTemplate, openFormats, openMoreOptions } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -11,6 +12,8 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
   await fillAccommodations(page);
   await expect(statusBar(page)).toContainText('Ready to export');
+  await openMoreOptions(page);
+  await openFormats(page);
 });
 
 async function bytes(download: Download): Promise<Buffer> {
@@ -207,7 +210,7 @@ test('JPG option for screen formats', async ({ page }) => {
 });
 
 test('a blocker for one format disables its download and the zip until it is resolved', async ({ page }) => {
-  await page.getByLabel('Template (required)').selectOption('split');
+  await chooseTemplate(page, 'split');
   await uploadPhoto(page, 900, 600); // under 1000 px: blocks print, fine for screens
   const letter = page.locator('[data-format="letter-poster"]');
   await expect(letter.locator('.format-status')).toContainText('Blocked');

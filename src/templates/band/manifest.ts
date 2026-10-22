@@ -9,6 +9,7 @@ export const bandManifest: TemplateManifest = {
   description: 'Full-bleed photo with a solid text band across the bottom. Without a photo, the band is the whole layout.',
   orientations: ['landscape', 'portrait', 'square'],
   usesFields: [...COMMON_FIELDS, ...PHOTO_FIELDS],
+  needsImage: true,
   slots: {
     title: { minU: MIN_FONT_U.title, maxU: 11 },
     date: { minU: MIN_FONT_U.primary, maxU: 7 },

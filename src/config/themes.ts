@@ -144,9 +144,9 @@ export function findTheme(id: string): Theme {
 export type ImageThemeMode = 'light' | 'dark' | 'contrast';
 
 export const IMAGE_THEMES: { id: string; mode: ImageThemeMode; name: string }[] = [
-  { id: 'images-light', mode: 'light', name: 'Match my images: Light' },
-  { id: 'images-dark', mode: 'dark', name: 'Match my images: Dark' },
-  { id: 'images-contrast', mode: 'contrast', name: 'Match my images: High contrast' },
+  { id: 'images-light', mode: 'light', name: 'Match my image: Light' },
+  { id: 'images-dark', mode: 'dark', name: 'Match my image: Dark' },
+  { id: 'images-contrast', mode: 'contrast', name: 'Match my image: High contrast' },
 ];
 
 export function findImageTheme(id: string) {

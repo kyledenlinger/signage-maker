@@ -27,6 +27,8 @@ export interface TemplateManifest {
   autoDateStyle: Record<OrientationClass, 'inline' | 'stacked'>;
   /** Template rendered instead when no photo is uploaded. */
   fallbackWithoutImage?: string;
+  /** Built around a photo or illustration: without one, the preview shows a placeholder and export is blocked. */
+  needsImage?: boolean;
 }
 
 export interface TemplateProps {

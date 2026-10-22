@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { fillAccommodations, revealBackground, statusBar } from './helpers';
+import { chooseTemplate, chooseTheme, fillAccommodations, openMoreOptions, revealBackground, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -12,7 +12,6 @@ test.beforeEach(async ({ page }) => {
 });
 
 const card = (page: Page, id: string) => page.locator(`[data-format="${id}"]`);
-const themeSelect = (page: Page) => page.getByLabel('Theme (required)');
 
 async function uploadBackground(page: Page) {
   const b64 = await page.evaluate(() => {
@@ -35,6 +34,7 @@ async function uploadBackground(page: Page) {
 }
 
 test('date, time and location render together, with a short weekday by default', async ({ page }) => {
+  await openMoreOptions(page);
   const when = card(page, 'landscape-hd').locator('.t-when');
   await expect(when.locator('[data-slot="date"]')).toHaveText('Fri, Oct 23');
   await expect(when.locator('[data-slot="timeLocation"]')).toContainText('7–10 p.m.');
@@ -59,30 +59,36 @@ test('a background image puts text on solid panels; other templates say they ski
   expect(panel).toBe('rgb(0, 0, 0)');
   await expect(page.getByRole('group', { name: 'Background image focal point' })).toBeVisible();
 
-  await page.getByLabel('Template (required)').selectOption('split');
+  await chooseTemplate(page, 'split');
   await expect(statusBar(page)).toContainText(
     "Split doesn't show background images",
   );
-  await page.getByLabel('Template (required)').selectOption('type-only');
+  await chooseTemplate(page, 'type-only');
   await expect(card(page, 'portrait-hd').locator('.tpl--backdrop')).toBeVisible();
 });
 
 test('Match my images: light, dark and high contrast, unlocked by an image, alongside the WFU themes', async ({ page }) => {
-  const wfu = themeSelect(page).locator('optgroup[label="WFU themes"] option');
-  await expect(wfu).toHaveText(['Black and gold', 'Athletics Gold', 'Light', 'High contrast']);
-  const matches = themeSelect(page).locator('optgroup option');
-  const light = themeSelect(page).locator('option[value="images-light"]');
-  await expect(light).toBeDisabled();
-  await expect(themeSelect(page).locator('optgroup').nth(1)).toHaveAttribute('label', 'Match my images (add an image first)');
+  const pills = page.locator('.pills .pill');
+  await expect(pills).toHaveText(['Black and gold', 'Athletics Gold', 'Light', 'High contrast', 'Match my image · add an image first']);
+  await expect(page.locator('.pill[data-theme="images"]')).toBeDisabled();
 
   await uploadBackground(page);
+  await expect(pills).toHaveText([
+    'Black and gold',
+    'Athletics Gold',
+    'Light',
+    'High contrast',
+    'Match my image: Light',
+    'Match my image: Dark',
+    'Match my image: High contrast',
+  ]);
+  const light = page.locator('.pill[data-theme="images-light"]');
   await expect(light).toBeEnabled();
-  await expect(matches).toHaveCount(7);
 
   const root = card(page, 'landscape-hd').locator('.tpl');
   const colorsOf = async (id: string) => {
-    await themeSelect(page).selectOption(id);
-    await expect(page.getByRole('list', { name: /Match my images: .* colors/ })).toBeVisible();
+    await chooseTheme(page, id);
+    await expect(page.getByRole('list', { name: /Match my image: .* colors/ })).toBeVisible();
     await expect(root).toHaveAttribute('class', /tpl/);
     await page.waitForTimeout(300);
     for (const format of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
@@ -100,24 +106,25 @@ test('Match my images: light, dark and high contrast, unlocked by an image, alon
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 
   await page.getByRole('button', { name: 'Remove background image' }).click();
-  await expect(themeSelect(page)).toHaveValue('black-gold');
-  await expect(light).toBeDisabled();
+  await expect(page.locator('.pill[data-theme="black-gold"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.pill[data-theme="images"]')).toBeDisabled();
 });
 
 test('background and image colors survive a reload', async ({ page }) => {
   await uploadBackground(page);
-  await themeSelect(page).selectOption('images-dark');
-  await expect(page.getByRole('list', { name: 'Match my images: Dark colors' })).toBeVisible();
+  await chooseTheme(page, 'images-dark');
+  await expect(page.getByRole('list', { name: 'Match my image: Dark colors' })).toBeVisible();
   await expect(card(page, 'landscape-hd').locator('.tpl')).not.toHaveCSS('background-color', 'rgb(0, 0, 0)');
   const before = await card(page, 'landscape-hd').locator('.tpl').evaluate((el) => getComputedStyle(el).backgroundColor);
   await page.waitForTimeout(400);
   await page.reload();
-  await expect(themeSelect(page)).toHaveValue('images-dark');
+  await expect(page.locator('.pill[data-theme=\"images-dark\"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(card(page, 'landscape-hd').locator('.t-backdrop img')).toBeVisible();
   await expect(card(page, 'landscape-hd').locator('.tpl')).toHaveCSS('background-color', before);
 });
 
 test('highlights stand out: bold and color by default, or either alone', async ({ page }) => {
+  await openMoreOptions(page);
   const list = card(page, 'landscape-hd').locator('.t-highlights');
   const tagline = card(page, 'landscape-hd').locator('[data-field="subtitle"]');
   const style = (loc: typeof list) =>
@@ -142,6 +149,7 @@ test('highlights stand out: bold and color by default, or either alone', async (
 });
 
 test('title and body fonts can be chosen separately, and are remembered', async ({ page }) => {
+  await openMoreOptions(page);
   await page.getByLabel('Title font').selectOption('source-serif');
   await page.getByLabel('Body font').selectOption('lexend');
   const sign = card(page, 'landscape-hd');
@@ -192,7 +200,7 @@ test('one "Photo or illustration" field: transparent images are illustrations, s
   await expect(page.getByRole('group', { name: 'Photo focal point' })).toHaveCount(0);
   await expect(page.getByLabel('Image description')).toBeVisible();
 
-  await page.getByLabel('Template (required)').selectOption('split');
+  await chooseTemplate(page, 'split');
   const img = card(page, 'landscape-hd').locator('.t-photo img');
   await expect(img).toHaveCSS('object-fit', 'contain');
   // No description needed for a decorative illustration.
@@ -206,7 +214,7 @@ test('one "Photo or illustration" field: transparent images are illustrations, s
   await expect(statusBar(page)).toContainText('The photo needs a description for alt text.');
   await expect(page.getByLabel('Image description')).toHaveAttribute('aria-invalid', 'true');
 
-  await page.getByLabel('Template (required)').selectOption('type-only');
+  await chooseTemplate(page, 'type-only');
   await expect(statusBar(page)).toContainText(
     "Type only doesn't show a photo or illustration",
   );
@@ -219,6 +227,7 @@ test('an opaque image is treated as a photo', async ({ page }) => {
 });
 
 test('ZSR Library logo: Semiformal horizontal by default, colorway matched to the theme', async ({ page }) => {
+  await openMoreOptions(page);
   const logo = card(page, 'landscape-hd').locator('.t-zsr-logo');
   await expect(page.getByLabel('Logo version')).toHaveValue('semiformal-zsr-library');
   await expect(page.getByLabel('Logo layout')).toHaveValue('horizontal');
@@ -232,12 +241,12 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
     ['light', 'color'],
     ['high-contrast', 'reverse'],
   ]) {
-    await themeSelect(page).selectOption(theme);
+    await chooseTheme(page, theme);
     await expect(logo).toHaveAttribute('data-colorway', colorway);
   }
 
   // A manual pick that's hard to see gets a warning, not a block.
-  await themeSelect(page).selectOption('athletics-gold');
+  await chooseTheme(page, 'athletics-gold');
   await page.getByLabel('Logo color').selectOption('gold');
   await expect(statusBar(page)).toContainText(
     'Logo color: the gold logo is hard to see on this theme. Use Automatic (black)',
@@ -253,26 +262,32 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 });
 
-test('design options sit in one panel below the preview; it can collapse', async ({ page }) => {
-  const design = page.locator('details.design');
-  for (const label of ['Template (required)', 'Theme (required)', 'Title font', 'Date style', 'Weekday', 'Highlights style', 'Logo version']) {
-    await expect(design.getByLabel(label)).toBeVisible();
+test('the Look card: template cards and color pills up front, the rest under More design options', async ({ page }) => {
+  const look = page.getByRole('region', { name: 'Look' });
+  const cards = look.locator('.option-card');
+  await expect(cards).toHaveCount(5);
+  await expect(look.locator('.option-card[data-template="split"]')).toContainText('Photo beside the text · needs a photo');
+  await expect(look.locator('.option-card[data-template="showcase"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(look.locator('.option-card[data-template="showcase"] .option-check')).toBeVisible();
+
+  const more = look.locator('details.more-options');
+  await expect(more).not.toHaveAttribute('open', '');
+  await openMoreOptions(page);
+  for (const label of ['Title font', 'Body font', 'Date style', 'Weekday', 'Highlights style', 'Logo version', 'Logo layout', 'Logo color']) {
+    await expect(more.getByLabel(label)).toBeVisible();
   }
-  await expect(design.getByRole('group', { name: /Formats/ })).toBeVisible();
-  await expect(design.getByRole('button', { name: 'Choose a file: Co-sponsor logos' })).toBeVisible();
-  // None of them are left in the event form.
-  await expect(page.locator('form.form-panel select, form.form-panel input[type="file"][multiple]')).toHaveCount(0);
-
-  // The panel follows the preview.
+  await expect(more.getByRole('button', { name: 'Choose a file: Co-sponsor logos' })).toBeVisible();
+  // The Look card follows the preview.
   const previewBottom = await page.locator('#preview').evaluate((el) => el.getBoundingClientRect().bottom);
-  const designTop = await design.evaluate((el) => el.getBoundingClientRect().top);
-  expect(designTop).toBeGreaterThanOrEqual(previewBottom);
-
-  await design.locator('> summary').click();
-  await expect(design.getByLabel('Template (required)')).toBeHidden();
-  // The toggle event that saves the state fires just after the click.
-  await expect.poll(() => page.evaluate(() => localStorage.getItem('signage.designOpen'))).toBe('false');
-  await page.reload();
-  await expect(page.locator('details.design')).not.toHaveAttribute('open', '');
+  const lookTop = await look.evaluate((el) => el.getBoundingClientRect().top);
+  expect(lookTop).toBeGreaterThanOrEqual(previewBottom);
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
+});
+
+test('a photo template with no photo shows a labeled placeholder and blocks export', async ({ page }) => {
+  await chooseTemplate(page, 'band');
+  await expect(page.locator('.stage .t-photo img')).toHaveAttribute('src', /Photo%20or%20illustration%20goes%20here/);
+  await expect(statusBar(page)).toContainText('Band needs a photo or illustration.');
+  await chooseTemplate(page, 'type-only');
+  await expect(statusBar(page)).not.toContainText('needs a photo');
 });

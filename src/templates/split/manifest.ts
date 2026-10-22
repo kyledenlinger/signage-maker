@@ -9,6 +9,7 @@ export const splitManifest: TemplateManifest = {
   description: 'Photo on one side, solid text panel on the other. Without a photo, the panel fills with an accent bar.',
   orientations: ['landscape', 'portrait', 'square'],
   usesFields: [...COMMON_FIELDS, ...PHOTO_FIELDS],
+  needsImage: true,
   slots: {
     title: { minU: MIN_FONT_U.title, maxU: 12 },
     date: { minU: MIN_FONT_U.primary, maxU: 8 },

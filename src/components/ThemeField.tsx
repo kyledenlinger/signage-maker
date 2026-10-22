@@ -6,12 +6,13 @@ import type { EventData, ImageAsset } from '../schema/event';
 import { fieldId } from './fields';
 
 /**
- * Theme picker: the WFU themes, plus three "Match my images" themes (light, dark, high contrast).
+ * Color picker: pills for the WFU themes, plus three "Match my image" themes (light, dark, high
+ * contrast) once there's an image.
  * Whenever the background image or the photo or illustration changes, their colors are drawn into all three
  * (contrast-safe) and stored with the event.
  */
 export function ThemeField() {
-  const { control, register, setValue, getValues } = useFormContext<EventData>();
+  const { control, setValue, getValues } = useFormContext<EventData>();
   const [background, image, palettes, themeId] = useWatch({
     control,
     name: ['background', 'image', 'imagePalettes', 'themeId'],
@@ -41,31 +42,64 @@ export function ThemeField() {
   }, [sourceKey, setValue, getValues]);
 
   const selectedImageTheme = findImageTheme(themeId);
+  const choose = (next: string) => setValue('themeId', next, { shouldDirty: true });
   return (
-    <div className="field">
-      <label htmlFor={id}>
-        Theme<span className="req"> (required)</span>
-      </label>
-      <select id={id} {...register('themeId')} aria-describedby={`${id}-hint`}>
-        <optgroup label="WFU themes">
-          {THEMES.map((t) => (
-            <option key={t.id} value={t.id}>
+    <div className="field" id={id} tabIndex={-1} role="group" aria-labelledby="colors-heading">
+      <h4 id="colors-heading" className="look-heading">
+        Colors
+      </h4>
+      <ul className="pills">
+        {THEMES.map((t) => (
+          <li key={t.id}>
+            <button
+              type="button"
+              className="pill"
+              data-theme={t.id}
+              aria-pressed={themeId === t.id}
+              onClick={() => choose(t.id)}
+            >
+              <span className="pill-swatch" aria-hidden="true">
+                <span style={{ background: t.background }} />
+                <span style={{ background: t.title }} />
+              </span>
               {t.name}
-            </option>
-          ))}
-        </optgroup>
-        <optgroup label={palettes ? 'Match my images' : 'Match my images (add an image first)'}>
-          {IMAGE_THEMES.map((t) => (
-            <option key={t.id} value={t.id} disabled={!palettes}>
-              {t.name}
-            </option>
-          ))}
-        </optgroup>
-      </select>
-      <p className="hint" id={`${id}-hint`}>
+            </button>
+          </li>
+        ))}
+        {palettes ? (
+          IMAGE_THEMES.map((t) => (
+            <li key={t.id}>
+              <button
+                type="button"
+                className="pill"
+                data-theme={t.id}
+                aria-pressed={themeId === t.id}
+                onClick={() => choose(t.id)}
+              >
+                <span className="pill-swatch" aria-hidden="true">
+                  <span style={{ background: palettes[t.mode].background }} />
+                  <span style={{ background: palettes[t.mode].title }} />
+                </span>
+                {t.name}
+              </button>
+            </li>
+          ))
+        ) : (
+          <li>
+            <button type="button" className="pill" data-theme="images" disabled>
+              <span className="pill-swatch is-empty" aria-hidden="true">
+                <span />
+                <span />
+              </span>
+              Match my image · add an image first
+            </button>
+          </li>
+        )}
+      </ul>
+      <p className="hint">
         {palettes
-          ? 'Match my images uses colors from your background image and your photo or illustration, adjusted to pass the contrast rules. Light, dark and high contrast versions are available.'
-          : 'Add a photo, illustration or background image to unlock Match my images (light, dark and high contrast).'}
+          ? 'Match my image uses colors from your image, adjusted to pass the contrast rules.'
+          : 'Add a photo, illustration or background image in step 2 to match its colors.'}
       </p>
       {palettes && selectedImageTheme && (
         <Swatches name={selectedImageTheme.name} colors={palettes[selectedImageTheme.mode]} />

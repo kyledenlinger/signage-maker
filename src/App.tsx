@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import { DesignPanel } from './components/DesignPanel';
+import { LookCard } from './components/LookCard';
 import { ExportBar } from './components/ExportBar';
 import { ProjectBar } from './components/ProjectBar';
 import { fieldId } from './components/fields';
@@ -19,6 +19,9 @@ import { useDebouncedValues } from './lib/useDebouncedValues';
 import { loadAutosave, loadFormatIds, saveAutosave, saveFormatIds } from './lib/storage';
 import { blankEvent, sampleEvent } from './schema/defaults';
 import type { EventData } from './schema/event';
+
+/** The pinned status and preview may take at most this share of the column's height. */
+const PINNED_MAX_SHARE = 0.8;
 
 /** Drops formats that no longer exist (a custom preset may have been removed since saving). */
 function knownFormats(event: EventData): EventData {
@@ -42,6 +45,25 @@ export function App() {
   const methods = useForm<EventData>({ defaultValues: initial });
   const preview = useDebouncedValues(methods, PREVIEW_DEBOUNCE_MS);
   const [announcement, setAnnouncement] = useState('');
+  // Height of the pinned status and preview, so focus and scrolling never land underneath it.
+  // It pins only while it leaves room for the Look card below.
+  const pinnedRef = useRef<HTMLDivElement>(null);
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [pinnedHeight, setPinnedHeight] = useState(0);
+  const [pinnable, setPinnable] = useState(false);
+  useLayoutEffect(() => {
+    const top = pinnedRef.current;
+    const column = workspaceRef.current;
+    if (!top || !column) return;
+    const measure = () => {
+      setPinnedHeight(top.offsetHeight);
+      setPinnable(top.offsetHeight <= column.clientHeight * PINNED_MAX_SHARE);
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(top);
+    observer.observe(column);
+    return () => observer.disconnect();
+  }, []);
   const [fitReports, setFitReports] = useState<Record<string, FitReport>>({});
   const [screenType, setScreenType] = useState<'png' | 'jpg'>('png');
   const exporter = useExporter(setAnnouncement);
@@ -144,8 +166,12 @@ export function App() {
           />
         </header>
         <main className="app-main">
-          <div className="workspace">
-            <div className="workspace-top">
+          <div
+            ref={workspaceRef}
+            className={`workspace ${pinnable ? 'is-pinned' : ''}`}
+            style={{ '--pinned-h': `${pinnedHeight}px` } as CSSProperties}
+          >
+            <div className="workspace-top" ref={pinnedRef}>
               <ExportBar
                 state={exporter.state}
                 screenType={screenType}
@@ -163,7 +189,7 @@ export function App() {
               />
             </div>
             <div className="workspace-look">
-              <DesignPanel />
+              <LookCard />
             </div>
           </div>
           <form

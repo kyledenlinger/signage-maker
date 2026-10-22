@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import type { FormatPreset } from '../config/formats';
 import { canvasUnit } from '../config/formats';
 import type { Theme } from '../config/themes';
 import { fitText, type SlotSizes } from '../lib/fitText';
 import type { EventData } from '../schema/event';
-import { resolveTemplate } from './registry';
+import { findTemplate, resolveTemplate } from './registry';
+import { PLACEHOLDER_IMAGE } from './shared/placeholder';
 import { SLOT_HIERARCHY, type SlotName } from './types';
 
 export interface FitProblem {
@@ -27,6 +28,11 @@ interface Props {
   theme: Theme;
   format: FormatPreset;
   onFit?: (report: FitReport) => void;
+  /**
+   * In the app's preview, a photo template with no image shows a labeled placeholder instead of
+   * falling back to another layout. Export never sets this (and is blocked in that case).
+   */
+  preview?: boolean;
 }
 
 const CONTENT = '[data-slot], .t-qr-tile, .t-logos';
@@ -118,8 +124,13 @@ function describe({ region, culprit, ratio }: Overflow): FitProblem | null {
  * Renders a template at its true pixel size and fits its text. The preview scales this down with a
  * CSS transform; export captures it at 1:1. Both go through this component.
  */
-export function TemplateRenderer({ event, theme, format, onFit }: Props) {
+export function TemplateRenderer({ event: given, theme, format, onFit, preview = false }: Props) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const placeholder = preview && !given.image && Boolean(findTemplate(given.templateId).manifest.needsImage);
+  const event = useMemo(
+    () => (placeholder ? { ...given, image: PLACEHOLDER_IMAGE, imageKind: 'illustration' as const } : given),
+    [given, placeholder],
+  );
   const { manifest, Component } = resolveTemplate(event.templateId, event);
   const onFitRef = useRef(onFit);
   onFitRef.current = onFit;

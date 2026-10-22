@@ -9,6 +9,7 @@ export const frameManifest: TemplateManifest = {
   description: 'Photo inset with a theme-colored border, text beside or below it. Without a photo, uses Type only.',
   orientations: ['landscape', 'portrait', 'square'],
   usesFields: [...COMMON_FIELDS, ...PHOTO_FIELDS],
+  needsImage: true,
   slots: {
     title: { minU: MIN_FONT_U.title, maxU: 12 },
     date: { minU: MIN_FONT_U.primary, maxU: 8 },

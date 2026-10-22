@@ -2,6 +2,7 @@ import type { ZodIssue } from 'zod';
 import { eventSchema, FIELD_ORDER, type EventData } from '../schema/event';
 import { FIELD_LABELS } from '../schema/labels';
 import type { FitReport } from '../templates/TemplateRenderer';
+import { findTemplate } from '../templates/registry';
 import { contentIssues, fitIssues, type Issue } from './checks';
 
 /**
@@ -142,10 +143,26 @@ function order(problem: Problem): number {
   return i === -1 ? FIELD_ORDER.length : i;
 }
 
+/** Split, Band and Frame are built around an image: without one there's nothing to show. */
+function missingImageProblems(event: EventData): Problem[] {
+  const { manifest } = findTemplate(event.templateId);
+  if (!manifest.needsImage || event.image) return [];
+  return [
+    {
+      id: 'template:needs-image',
+      severity: 'blocker',
+      fieldId: fieldDomId('image'),
+      message: `${manifest.name} needs a photo or illustration.`,
+      actionLabel: 'Add an image, or pick another template',
+    },
+  ];
+}
+
 export function getProblems(event: EventData, fitReports: FitReport[] = []): Problem[] {
   const formatIds = Array.isArray(event.formatIds) ? event.formatIds : [];
   const all = [
     ...schemaProblems(event),
+    ...missingImageProblems(event),
     ...placeholderProblems(event),
     ...contentIssues(event, formatIds).map(fromIssue),
     ...fitIssues(fitReports.filter((r) => formatIds.includes(r.formatId))).map(fromIssue),

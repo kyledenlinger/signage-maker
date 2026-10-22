@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { FileType, FormatPreset } from '../config/formats';
 import { resolveTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
@@ -6,6 +6,8 @@ import { useFormats } from '../lib/formatStore';
 import { blockersFor, type Problem } from '../lib/problems';
 import type { EventData } from '../schema/event';
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
+import { FormatPicker } from './FormatPicker';
+import { STATUS_BAR_ID } from './StatusBar';
 
 interface Props {
   event: EventData;
@@ -59,7 +61,7 @@ function ScaledSign({
     >
       {scale > 0 && (
         <div className="scaled-sign-canvas" style={{ transform: `scale(${scale})` }} aria-hidden="true">
-          <TemplateRenderer event={event} theme={resolveTheme(event)} format={format} onFit={onFit} />
+          <TemplateRenderer event={event} theme={resolveTheme(event)} format={format} onFit={onFit} preview />
         </div>
       )}
     </div>
@@ -78,7 +80,7 @@ function StatusTag({ blocked, id }: { blocked: boolean; id?: string }) {
  * One large preview of the selected format, a strip to switch formats, an "across the room" view
  * and full screen. Every sign renders through the same TemplateRenderer the export uses.
  */
-export function PreviewCard({ event, problems, onFit, exporting, onDownload, children }: Props & { children?: ReactNode }) {
+export function PreviewCard({ event, problems, onFit, exporting, onDownload }: Props) {
   const formats = useFormats().filter((f) => event.formatIds.includes(f.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<'fit' | 'room'>('fit');
@@ -90,7 +92,6 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload, chi
 
   const selected = formats.find((f) => f.id === selectedId) ?? formats[0];
   const blockers = selected ? blockersFor(problems, selected.id) : [];
-  const statusId = selected ? `format-status-${selected.id}` : undefined;
 
   const pad = 24;
   const fit = selected
@@ -113,6 +114,23 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload, chi
             </span>
           )}
         </h2>
+        {selected && (
+          <div className="selected-actions">
+            {selected.fileTypes.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className="button-secondary button-small"
+                aria-label={`Download ${type.toUpperCase()} of ${selected.name}`}
+                disabled={blockers.length > 0 || exporting}
+                aria-describedby={blockers.length > 0 ? STATUS_BAR_ID : undefined}
+                onClick={() => onDownload(selected, type)}
+              >
+                {type.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="preview-tools">
           <div className="segmented" role="group" aria-label="Preview size">
             <button type="button" aria-pressed={mode === 'fit'} onClick={() => setMode('fit')}>
@@ -149,32 +167,10 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload, chi
         </p>
       )}
 
-      {selected && (
-        <div className="selected-actions">
-          <StatusTag blocked={blockers.length > 0} id={statusId} />
-          <span className="card-actions-label" aria-hidden="true">
-            Download:
-          </span>
-          {selected.fileTypes.map((type) => (
-            <button
-              key={type}
-              type="button"
-              className="button-secondary button-small"
-              aria-label={`Download ${type.toUpperCase()} of ${selected.name}`}
-              disabled={blockers.length > 0 || exporting}
-              aria-describedby={blockers.length > 0 ? statusId : undefined}
-              onClick={() => onDownload(selected, type)}
-            >
-              {type.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      )}
-
       <ul className="format-strip" aria-label="Formats">
         {formats.map((f) => {
           const blocked = blockersFor(problems, f.id).length > 0;
-          const thumb = Math.min(96 / f.width, 64 / f.height);
+          const thumb = Math.min(80 / f.width, 48 / f.height);
           return (
             <li key={f.id}>
               <button
@@ -207,7 +203,7 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload, chi
             </li>
           );
         })}
-        {children}
+        <FormatPicker />
       </ul>
 
       {fullscreen && selected && (

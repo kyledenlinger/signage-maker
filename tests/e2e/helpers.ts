@@ -27,3 +27,25 @@ export async function revealBackground(page: Page) {
   const link = page.getByRole('button', { name: 'Use a full background image instead' });
   if (await link.count()) await link.click();
 }
+
+/** Picks a template card in the Look card. */
+export async function chooseTemplate(page: Page, id: string) {
+  await page.locator(`.option-card[data-template="${id}"]`).click();
+}
+
+/** Picks a color pill in the Look card. */
+export async function chooseTheme(page: Page, id: string) {
+  await page.locator(`.pill[data-theme="${id}"]`).click();
+}
+
+/** Opens "Add a format" (format checkboxes and custom sizes). */
+export async function openFormats(page: Page) {
+  const picker = page.locator('details.format-picker');
+  if (!(await picker.evaluate((d: HTMLDetailsElement) => d.open))) await page.getByRole('button', { name: 'Add a format' }).click();
+}
+
+/** Opens "More design options" (fonts, text style, logos). */
+export async function openMoreOptions(page: Page) {
+  const more = page.locator('details.more-options');
+  if (!(await more.evaluate((d: HTMLDetailsElement) => d.open))) await more.locator('> summary').click();
+}

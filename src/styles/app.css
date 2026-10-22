@@ -659,7 +659,6 @@ button:disabled {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.75rem;
 }
 .card-actions-label {
   color: var(--text-muted);
@@ -695,8 +694,8 @@ button:disabled {
 .format-thumb {
   display: grid;
   place-items: center;
-  width: 96px;
-  height: 64px;
+  width: 80px;
+  height: 48px;
   background: var(--stage);
   border-radius: 6px;
 }
@@ -891,18 +890,23 @@ button:disabled {
 }
 
 @media (min-width: 1024px) {
+  /* Leaves room under the pinned preview for the template cards at 1440 × 900. */
   .stage {
-    height: clamp(280px, 44vh, 560px);
+    height: clamp(300px, calc(100vh - 560px), 560px);
   }
 }
 /* On tall-enough screens the status and preview stay pinned while the Look card scrolls under them. */
-@media (min-width: 1024px) and (min-height: 760px) {
-  .workspace-top {
+@media (min-width: 1024px) {
+  .workspace.is-pinned .workspace-top {
     position: sticky;
     top: 0;
     z-index: 2;
     background: var(--bg);
     padding-bottom: 0.5rem;
+  }
+  /* Anything scrolled into view or focused stops below the pinned part, never under it. */
+  .workspace.is-pinned {
+    scroll-padding-top: calc(var(--pinned-h, 0px) + 0.5rem);
   }
 }
 
@@ -1132,4 +1136,218 @@ button:disabled {
 .form-details[open] > summary::before,
 .design[open] > summary::before {
   transform: rotate(90deg);
+}
+
+/* ---------- Look card ---------- */
+
+.look > h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+}
+.look-heading {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.option-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 0.6rem;
+}
+.option-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  gap: 0.25rem;
+  align-content: start;
+  padding: 0.5rem;
+  text-align: left;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-option);
+  background: var(--surface);
+  color: var(--text);
+  --sketch-bg: #2c2f36;
+  --sketch-text: #e9eaee;
+  --sketch-photo: #7d8594;
+  --sketch-qr: #ffffff;
+  --sketch-frame: var(--brand-gold);
+}
+.option-card[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.template-sketch {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+.option-name {
+  font-weight: 700;
+}
+.option-blurb {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  line-height: 1.3;
+}
+.option-check {
+  position: absolute;
+  top: 0.35rem;
+  right: 0.35rem;
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.look .field + .field {
+  margin-top: 1rem;
+}
+
+.pills {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: var(--target);
+  padding: 0.35rem 0.9rem 0.35rem 0.4rem;
+  border: 1.5px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 500;
+}
+.pill[aria-pressed='true'] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+  box-shadow: 0 0 0 1px var(--accent);
+  font-weight: 700;
+}
+.pill-swatch {
+  display: inline-flex;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  flex: none;
+}
+.pill-swatch span {
+  flex: 1;
+}
+.pill-swatch.is-empty span {
+  background: repeating-linear-gradient(45deg, var(--divider) 0 4px, var(--surface) 4px 8px);
+}
+
+.more-options {
+  margin-top: 1rem;
+  border-top: 1px solid var(--divider);
+  padding-top: 0.5rem;
+}
+.more-options > summary {
+  cursor: pointer;
+  min-height: var(--target);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--accent);
+  list-style: none;
+}
+.more-options > summary::-webkit-details-marker {
+  display: none;
+}
+.more-options > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1rem;
+  color: var(--text-muted);
+}
+.more-options[open] > summary::before {
+  transform: rotate(90deg);
+}
+.more-groups {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  gap: 0.5rem 1.25rem;
+  align-items: start;
+  margin-top: 0.5rem;
+}
+.more-group h4 {
+  font-size: 0.95rem;
+  margin: 0 0 0.4rem;
+  color: var(--text-muted);
+}
+.more-group .field {
+  margin-bottom: 0.75rem;
+}
+
+/* ---------- Format picker ---------- */
+
+.format-add {
+  min-height: calc(48px + 0.8rem);
+  padding: 0.4rem 0.9rem;
+  border: 1.5px dashed var(--border-input);
+  border-radius: var(--radius-option);
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+}
+.format-picker-row {
+  flex-basis: 100%;
+}
+.format-picker[open] {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-option);
+  padding: 0.75rem;
+  background: var(--surface-muted);
+}
+.format-picker .check-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr));
+  gap: 0 0.75rem;
+}
+
+/* Wide screens: the status sits beside the format toggle and download button. */
+@media (min-width: 1024px) {
+  .export-bar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0 1rem;
+    align-items: start;
+  }
+  .export-bar .status-bar {
+    grid-row: 1 / span 3;
+  }
+  .export-bar .export-controls {
+    margin-top: 0;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+  }
+  .export-bar .hint {
+    grid-column: 2;
+    margin-top: 0.4rem;
+    max-width: 22rem;
+    font-size: 0.85rem;
+  }
+  .export-bar .export-rows,
+  .export-bar .export-message {
+    grid-column: 1 / -1;
+  }
 }

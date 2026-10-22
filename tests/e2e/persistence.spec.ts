@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { fillAccommodations, openDetails } from './helpers';
+import { chooseTemplate, chooseTheme, openFormats, openMoreOptions } from './helpers';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 
@@ -9,7 +10,10 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await openFormats(page);
   await page.evaluate(() => document.fonts.ready);
+  await openMoreOptions(page);
+  await openFormats(page);
 });
 
 const title = (page: Page) => page.getByLabel('Title (required)');
@@ -35,15 +39,16 @@ async function saveProject(page: Page) {
 
 test('reload restores the last project', async ({ page }) => {
   await title(page).fill('Banned Books Week');
-  await page.getByLabel('Template (required)').selectOption('band');
-  await page.getByLabel('Theme (required)').selectOption('light');
+  await chooseTemplate(page, 'band');
+  await chooseTheme(page, 'light');
   await openDetails(page);
   await page.getByLabel('Highlight 1', { exact: true }).fill('Read-out');
   await settle(page);
   await page.reload();
+  await openFormats(page);
   await expect(title(page)).toHaveValue('Banned Books Week');
-  await expect(page.getByLabel('Template (required)')).toHaveValue('band');
-  await expect(page.getByLabel('Theme (required)')).toHaveValue('light');
+  await expect(page.locator('.option-card[data-template=\"band\"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.pill[data-theme=\"light\"]')).toHaveAttribute('aria-pressed', 'true');
   await openDetails(page);
   await expect(page.getByLabel('Highlight 1', { exact: true })).toHaveValue('Read-out');
   await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveText('Banned Books Week');
@@ -69,12 +74,13 @@ test('start new event asks first, then clears the form and stays cleared', async
   await expect(page.getByLabel('Location (required)')).toHaveValue('');
   await settle(page);
   await page.reload();
+  await openFormats(page);
   await expect(title(page)).toHaveValue('');
 });
 
 test('duplicate keeps template, theme, logos and accommodations; clears the event', async ({ page }) => {
-  await page.getByLabel('Template (required)').selectOption('split');
-  await page.getByLabel('Theme (required)').selectOption('high-contrast');
+  await chooseTemplate(page, 'split');
+  await chooseTheme(page, 'high-contrast');
   await page.getByRole('textbox', { name: 'Accommodations line' }).fill('Accessibility requests: zsr@example.edu');
   const logo = await page.evaluate(() => {
     const c = document.createElement('canvas');
@@ -92,15 +98,15 @@ test('duplicate keeps template, theme, logos and accommodations; clears the even
   await expect(title(page)).toHaveValue('');
   await expect(title(page)).toBeFocused();
   await expect(page.getByLabel('Date (required)')).toHaveValue('');
-  await expect(page.getByLabel('Template (required)')).toHaveValue('split');
-  await expect(page.getByLabel('Theme (required)')).toHaveValue('high-contrast');
+  await expect(page.locator('.option-card[data-template=\"split\"]')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.pill[data-theme=\"high-contrast\"]')).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByRole('textbox', { name: 'Accommodations line' })).toHaveValue('Accessibility requests: zsr@example.edu');
   await expect(page.locator('.drop-files')).toContainText('cosponsor.png');
 });
 
 test('a saved project reopens identically, with its photo and custom size', async ({ page }, testInfo) => {
   await title(page).fill('Banned Books Week');
-  await page.getByLabel('Template (required)').selectOption('frame');
+  await chooseTemplate(page, 'frame');
   const photo = await page.evaluate(() => {
     const c = document.createElement('canvas');
     c.width = 2400;
@@ -124,6 +130,7 @@ test('a saved project reopens identically, with its photo and custom size', asyn
   // A fresh browser: no autosave, no custom sizes.
   await page.evaluate(() => localStorage.clear());
   await page.reload();
+  await openFormats(page);
   await expect(title(page)).toHaveValue('Halloween Game Night');
   await expect(page.getByRole('checkbox', { name: /Lobby screen/ })).toHaveCount(0);
 
@@ -179,6 +186,7 @@ test('custom sizes: validated, previewed, exported at exact size, remembered, re
 
   await settle(page);
   await page.reload();
+  await openFormats(page);
   await expect(page.getByRole('checkbox', { name: /Lobby screen/ })).toBeChecked();
 
   await page.getByText('Custom sizes').click();
