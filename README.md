@@ -13,12 +13,12 @@ Everything happens in your browser. Nothing you type or upload is sent anywhere.
    - **ZSR Library logo:** the approved WF | ZSR Library logo is on by default, as *Semiformal: Wake Forest ZSR Library*, horizontal. You can pick any approved version (Formal, Semiformal or Informal; with or without "Library"), horizontal or vertical. Its color (Color, Reverse, Gold, Black or White) is matched to the theme automatically so it stays readable; you can override it, and the panel warns if your pick is hard to see.
    - **More logos:** add up to three co-sponsor logos (SVG or PNG with a transparent background).
 3. **Choose a design.** Everything about how the signs look is in the **Design** panel, right above the previews: template and formats, theme and fonts, date and highlight style, and logos. Landscape HD, Portrait HD and Letter poster are selected to start; your choice is remembered. Collapse the panel to keep the previews at the top.
-4. **Check the previews.** All selected formats update as you type. The **Readability check** panel lists anything to fix, as *format · field · problem · fix*. Click an item to jump to the field. Items marked **Blocks export** must be fixed before that format can download; **Warnings** are advice.
+4. **Check the status.** The status bar above the previews updates as you type. Red means something blocks export: each problem is listed with a link that jumps to the field (which is outlined in red). Green means **Ready to export**. Suggestions, like text that's long for a 10-second read, are listed too but don't block anything. Placeholder text in brackets, such as the "[email]" in the default accommodations line, always blocks export until you replace it.
 5. **Download.**
-   - **Download all selected (.zip)** gets every format in one file, plus `event.json` (the project, so you can reopen it) and `alt-text.txt` (ready-to-paste alt text for each file). Choose PNG or JPG for screen formats; print formats come as PDF.
+   - **Download all (.zip)** gets every format in one file, plus `event.json` (the project, so you can reopen it) and `alt-text.txt` (ready-to-paste alt text for each file). Choose PNG or JPG for screen formats; print formats come as PDF.
    - Or use the **Download** buttons under any preview for just that format.
    - Files are named like `banned-books-week_landscape-hd_1920x1080.png`.
-   - If a format is blocked, it's skipped and the message says why; the others still download.
+   - While anything blocks export, the zip button reads **Download blocked**, and a format with its own problem (say, a photo too small for print) shows **Blocked** with its buttons turned off. Fix the problem, or untick that format, and the buttons come back.
 
 Submit the files through the usual campus signage form.
 

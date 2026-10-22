@@ -2,12 +2,15 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Download, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
+import { fillAccommodations, statusBar } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await page.evaluate(() => document.fonts.ready);
+  await fillAccommodations(page);
+  await expect(statusBar(page)).toContainText('Ready to export');
 });
 
 async function bytes(download: Download): Promise<Buffer> {
@@ -173,7 +176,7 @@ test('chosen title and body fonts are embedded in the export', async ({ page }) 
 });
 
 test('download all: zip holds each format, event.json and alt-text.txt', async ({ page }) => {
-  const file = await download(page, 'Download all selected (.zip)');
+  const file = await download(page, 'Download all (.zip)');
   expect(file.suggestedFilename()).toBe('halloween-game-night_signage.zip');
   const zip = await JSZip.loadAsync(await bytes(file));
   const names = Object.keys(zip.files).sort();
@@ -192,23 +195,35 @@ test('download all: zip holds each format, event.json and alt-text.txt', async (
   const png = await zip.file('halloween-game-night_landscape-hd_1920x1080.png')!.async('nodebuffer');
   expect(pngSize(png)).toEqual({ width: 1920, height: 1080 });
 
-  await expect(page.getByRole('status')).toHaveText('Downloaded halloween-game-night_signage.zip with 3 formats.');
+  await expect(page.getByRole('status').last()).toHaveText('Downloaded halloween-game-night_signage.zip with 3 formats.');
 });
 
 test('JPG option for screen formats', async ({ page }) => {
   await page.getByRole('radio', { name: 'JPG' }).check();
-  const file = await download(page, 'Download all selected (.zip)');
+  const file = await download(page, 'Download all (.zip)');
   const names = Object.keys((await JSZip.loadAsync(await bytes(file))).files);
   expect(names).toContain('halloween-game-night_landscape-hd_1920x1080.jpg');
   expect(names).toContain('halloween-game-night_letter-poster_2550x3300.pdf');
 });
 
-test('a blocked format is skipped and reported; the rest still export', async ({ page }) => {
+test('a blocker for one format disables its download and the zip until it is resolved', async ({ page }) => {
   await page.getByLabel('Template (required)').selectOption('split');
   await uploadPhoto(page, 900, 600); // under 1000 px: blocks print, fine for screens
-  await expect(page.locator('[data-format="letter-poster"] figcaption')).toContainText('blocked');
+  const letter = page.locator('[data-format="letter-poster"]');
+  await expect(letter.locator('figcaption')).toContainText('Blocked');
+  await expect(letter.getByRole('button', { name: 'Download PDF of Letter poster' })).toBeDisabled();
+  await expect(page.locator('[data-format="landscape-hd"] figcaption')).toContainText('Ready');
+  await expect(page.getByRole('button', { name: 'Download PNG of Landscape HD' })).toBeEnabled();
+  await expect(statusBar(page)).toContainText('Letter poster · Photo or illustration: 900 px is too small for this size.');
+  const zip = page.getByRole('button', { name: 'Download blocked' });
+  await expect(zip).toBeDisabled();
+  await expect(zip).toHaveAttribute('aria-describedby', 'status-bar');
+  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
+  expect(results.violations).toEqual([]);
 
-  const file = await download(page, 'Download all selected (.zip)');
+  // Dropping the blocked format clears the blocker; the zip holds the rest.
+  await page.getByRole('checkbox', { name: /Letter poster/ }).uncheck();
+  const file = await download(page, 'Download all (.zip)');
   const names = Object.keys((await JSZip.loadAsync(await bytes(file))).files).sort();
   expect(names).toEqual([
     'alt-text.txt',
@@ -216,24 +231,24 @@ test('a blocked format is skipped and reported; the rest still export', async ({
     'halloween-game-night_landscape-hd_1920x1080.png',
     'halloween-game-night_portrait-hd_1080x1920.png',
   ]);
-  await expect(page.getByRole('status')).toContainText('with 2 formats. Skipped Letter poster (Photo or illustration: 900 px is too small');
-  await expect(page.locator('.export-rows .is-skipped')).toContainText('Letter poster: Skipped');
-
-  const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
-  expect(results.violations).toEqual([]);
 });
 
-test('text that does not fit blocks that format', async ({ page }) => {
+test('text that does not fit disables that format', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('Pneumonoultramicroscopicsilicovolcanoconiosis');
-  await page.getByRole('button', { name: 'Download PNG of Portrait HD' }).click();
-  await expect(page.getByRole('status')).toContainText("Nothing was exported. Skipped Portrait HD (Title: doesn't fit");
+  await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
+  await expect(statusBar(page)).toContainText("Portrait HD · Title: doesn't fit at minimum size.");
 });
 
-test('form errors stop the export and show the summary', async ({ page }) => {
+test('every download is disabled while a blocker exists, and comes back when it is fixed', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('');
-  await page.getByRole('button', { name: 'Download all selected (.zip)' }).click();
-  await expect(page.locator('.error-summary')).toBeFocused();
-  await expect(page.locator('.error-summary')).toContainText('Title: Title is required.');
+  await expect(statusBar(page)).toContainText('Title is required.');
+  await expect(page.getByRole('button', { name: 'Download blocked' })).toBeDisabled();
+  for (const button of await page.locator('.card-actions button').all()) await expect(button).toBeDisabled();
+
+  await page.getByLabel('Title (required)').fill('Halloween Game Night');
+  await expect(statusBar(page)).toContainText('Ready to export');
+  await expect(page.getByRole('button', { name: 'Download all (.zip)' })).toBeEnabled();
+  for (const button of await page.locator('.card-actions button').all()) await expect(button).toBeEnabled();
 });
 
 // The spec's target is a typical laptop; shared CI runners are slower, so CI gets more room.

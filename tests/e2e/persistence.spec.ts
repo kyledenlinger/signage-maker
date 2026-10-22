@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
+import { fillAccommodations } from './helpers';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 
@@ -165,6 +166,7 @@ test('custom sizes: validated, previewed, exported at exact size, remembered, re
   await page.getByRole('button', { name: 'Add size' }).click();
   await expect(page.locator('.custom-status')).toHaveText('Added Lobby screen (1366 × 768) and selected it.');
 
+  await fillAccommodations(page);
   const card = page.locator('[data-format="custom-lobby-screen"]');
   await expect(card).toHaveAttribute('data-fits', 'true');
   const [file] = await Promise.all([page.waitForEvent('download'), card.getByRole('button', { name: 'Download PNG of Lobby screen' }).click()]);

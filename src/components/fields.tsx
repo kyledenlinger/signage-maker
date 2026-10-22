@@ -1,8 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { useFormContext, useWatch, type FieldErrors, type Path } from 'react-hook-form';
+import { useFormContext, useWatch, type Path } from 'react-hook-form';
 import type { CharLimit } from '../config/limits';
 import { IMAGE_PX } from '../config/limits';
 import { isVector, readImageFile } from '../lib/image';
+import { useFieldBlocker } from './problemsContext';
 import type { EventData, ImageAsset } from '../schema/event';
 
 export type FieldName = Path<EventData>;
@@ -11,14 +12,9 @@ export function fieldId(name: string): string {
   return `field-${name.replace(/\./g, '-')}`;
 }
 
-export function errorAt(errors: FieldErrors<EventData>, name: string): string | undefined {
-  let node: unknown = errors;
-  for (const key of name.split('.')) {
-    if (node == null || typeof node !== 'object') return undefined;
-    node = (node as Record<string, unknown>)[key];
-  }
-  const message = (node as { message?: unknown } | undefined)?.message;
-  return typeof message === 'string' ? message : undefined;
+/** The blocker message for a field, if it has one (from the shared problems list). */
+export function useFieldError(name: string): string | undefined {
+  return useFieldBlocker(fieldId(name))?.message;
 }
 
 function describedBy(...ids: (string | false | null | undefined)[]) {
@@ -66,10 +62,10 @@ interface TextFieldProps {
 }
 
 export function TextField({ name, label, required, hint, limit, type = 'text', multiline, autoComplete }: TextFieldProps) {
-  const { register, control, formState } = useFormContext<EventData>();
+  const { register, control } = useFormContext<EventData>();
   const value = useWatch({ control, name });
   const id = fieldId(name);
-  const error = errorAt(formState.errors, name);
+  const error = useFieldError(name);
   const length = typeof value === 'string' ? value.length : 0;
   const aria = {
     'aria-invalid': error ? true : undefined,
@@ -120,9 +116,9 @@ interface SelectFieldProps {
 }
 
 export function SelectField({ name, label, required, options, hint }: SelectFieldProps) {
-  const { register, formState } = useFormContext<EventData>();
+  const { register } = useFormContext<EventData>();
   const id = fieldId(name);
-  const error = errorAt(formState.errors, name);
+  const error = useFieldError(name);
   return (
     <div className="field">
       <Label id={id} label={label} required={required} />

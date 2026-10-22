@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FileType, FormatPreset } from '../config/formats';
 import { resolveTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
+import { blockersFor, type Problem } from '../lib/problems';
 import { useFormats } from '../lib/formatStore';
 import type { EventData } from '../schema/event';
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
@@ -9,13 +10,12 @@ import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer'
 interface Props {
   event: EventData;
   onFit: (report: FitReport) => void;
-  /** Formats with a blocking issue. */
-  blockedIds: Set<string>;
+  problems: Problem[];
   exporting: boolean;
   onDownload: (format: FormatPreset, type: FileType) => void;
 }
 
-export function PreviewGrid({ event, onFit, blockedIds, exporting, onDownload }: Props) {
+export function PreviewGrid({ event, onFit, problems, exporting, onDownload }: Props) {
   const formats = useFormats().filter((f) => event.formatIds.includes(f.id));
   if (formats.length === 0) {
     return <p className="preview-empty">Choose at least one format to see a preview.</p>;
@@ -28,7 +28,7 @@ export function PreviewGrid({ event, onFit, blockedIds, exporting, onDownload }:
             event={event}
             format={f}
             onFit={onFit}
-            blocked={blockedIds.has(f.id)}
+            blockers={blockersFor(problems, f.id)}
             exporting={exporting}
             onDownload={onDownload}
           />
@@ -40,10 +40,12 @@ export function PreviewGrid({ event, onFit, blockedIds, exporting, onDownload }:
 
 interface CardProps extends Pick<Props, 'event' | 'onFit' | 'exporting' | 'onDownload'> {
   format: FormatPreset;
-  blocked: boolean;
+  blockers: Problem[];
 }
 
-function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: CardProps) {
+function PreviewCard({ event, format, onFit, blockers, exporting, onDownload }: CardProps) {
+  const blocked = blockers.length > 0;
+  const statusId = `format-status-${format.id}`;
   const frameRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [fits, setFits] = useState(true);
@@ -64,11 +66,10 @@ function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: C
         <span className="muted">
           {format.width} × {format.height}
         </span>
-        {!fits ? (
-          <span className="preview-flag"> · text doesn’t fit</span>
-        ) : (
-          blocked && <span className="preview-flag"> · blocked</span>
-        )}
+        <span id={statusId} className={`format-status ${blocked ? 'is-blocked' : 'is-ready'}`}>
+          <span aria-hidden="true">{blocked ? '✕' : '✓'}</span> {blocked ? 'Blocked' : 'Ready'}
+          {!fits && <span className="visually-hidden">: text doesn’t fit</span>}
+        </span>
       </figcaption>
       <div
         ref={frameRef}
@@ -101,10 +102,9 @@ function PreviewCard({ event, format, onFit, blocked, exporting, onDownload }: C
             type="button"
             className="button-secondary button-small"
             aria-label={`Download ${type.toUpperCase()} of ${format.name}`}
-            aria-disabled={exporting || undefined}
-            onClick={() => {
-              if (!exporting) onDownload(format, type);
-            }}
+            disabled={blocked || exporting}
+            aria-describedby={blocked ? statusId : undefined}
+            onClick={() => onDownload(format, type)}
           >
             {type.toUpperCase()}
           </button>

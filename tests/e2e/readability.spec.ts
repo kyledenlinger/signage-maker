@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { fillAccommodations, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -11,7 +12,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => document.fonts.ready);
 });
 
-const panel = (page: Page) => page.getByRole('region', { name: 'Readability check' });
+const panel = (page: Page) => statusBar(page);
 
 /** True when the title's text lies entirely inside the sign. */
 async function titleInsideCanvas(page: Page, formatId: string) {
@@ -25,8 +26,12 @@ async function titleInsideCanvas(page: Page, formatId: string) {
   });
 }
 
-test('sample event has no blocking problems', async ({ page }) => {
-  await expect(panel(page)).toContainText('No problems found.');
+test('the sample event is ready once the placeholder is replaced', async ({ page }) => {
+  await expect(panel(page)).toContainText('1 problem blocks export');
+  await expect(panel(page)).toContainText('The accommodations line still says [email].');
+  await fillAccommodations(page);
+  await expect(panel(page)).toContainText('Ready to export');
+  await expect(panel(page)).toContainText('3 formats, plus alt text and the project file.');
   for (const id of DEFAULT_FORMATS) await expect(page.locator(`[data-format="${id}"]`)).toHaveAttribute('data-fits', 'true');
 });
 
@@ -34,7 +39,7 @@ test('a long title warns, shrinks to fit and is never clipped', async ({ page })
   const title = 'The Extraordinarily Long-Winded Annual Lecture on Everything';
   expect(title.length).toBeLessThanOrEqual(60);
   await page.getByLabel('Title (required)').fill(title);
-  await expect(panel(page)).toContainText(`All formats · Title · ${title.length} characters, over the recommended 40`);
+  await expect(panel(page)).toContainText(`Title: ${title.length} characters, over the recommended 40.`);
   for (const id of DEFAULT_FORMATS) {
     const card = page.locator(`[data-format="${id}"]`);
     await expect(card.locator('[data-slot="title"]')).toHaveText(title);
@@ -45,18 +50,20 @@ test('a long title warns, shrinks to fit and is never clipped', async ({ page })
 test('an over-limit title blocks export and is shown in full, not truncated', async ({ page }) => {
   const title = 'A Title That Runs Well Past The Sixty Character Hard Limit For Signs';
   await page.getByLabel('Title (required)').fill(title);
-  await expect(panel(page)).toContainText('Blocks export: All formats · Title');
+  await expect(panel(page)).toContainText(`Title is ${title.length} characters; the limit is 60.`);
+  await expect(page.getByRole('button', { name: 'Download blocked' })).toBeDisabled();
   await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveText(title);
 });
 
 test('text that cannot fit is flagged per format with a fix, never broken mid-word', async ({ page }) => {
   const word = 'Pneumonoultramicroscopicsilicovolcanoconiosis';
   await page.getByLabel('Title (required)').fill(word);
-  await expect(panel(page)).toContainText("Title · doesn't fit at minimum size · shorten by ~");
+  await expect(panel(page)).toContainText("Portrait HD · Title: doesn't fit at minimum size.");
   // Every fit problem points at the title, the field that is actually too wide.
-  const fitItems = panel(page).getByRole('button', { name: /doesn't fit/ });
-  for (const item of await fitItems.all()) await expect(item).toContainText('· Title ·');
-  await expect(page.locator('[data-fits="false"] figcaption').first()).toContainText('text doesn’t fit');
+  const fitItems = panel(page).locator('li', { hasText: "doesn't fit" });
+  for (const item of await fitItems.all()) await expect(item).toContainText('· Title:');
+  await expect(page.locator('[data-fits="false"] figcaption').first()).toContainText('Blocked');
+  await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
   // Still one line: the word is never split.
   const lines = await page
     .locator('[data-format="portrait-hd"] [data-slot="title"]')
@@ -72,7 +79,7 @@ test('text that cannot fit is flagged per format with a fix, never broken mid-wo
 
 test('clicking a warning focuses its field', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('HALLOWEEN GAME NIGHT');
-  const item = panel(page).getByRole('button', { name: /Title · written in all caps/ });
+  const item = panel(page).getByRole('link', { name: /Use title case/ });
   await item.click();
   await expect(page.getByLabel('Title (required)')).toBeFocused();
 });

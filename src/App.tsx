@@ -1,8 +1,5 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
-import type { FieldErrors } from 'react-hook-form';
-import { ErrorSummary, summarizeErrors, type SummaryItem } from './components/ErrorSummary';
 import { DesignPanel } from './components/DesignPanel';
 import { ExportBar } from './components/ExportBar';
 import { ProjectBar } from './components/ProjectBar';
@@ -10,8 +7,8 @@ import { fieldId } from './components/fields';
 import { useExporter } from './components/useExporter';
 import { EventForm } from './components/EventForm';
 import { PreviewGrid } from './components/PreviewGrid';
-import { WarningsPanel } from './components/WarningsPanel';
-import { contentIssues, fitIssues } from './lib/checks';
+import { ProblemsContext } from './components/problemsContext';
+import { getProblems } from './lib/problems';
 import type { FitReport } from './templates/TemplateRenderer';
 import type { FileType, FormatPreset } from './config/formats';
 import { allFormats, customFormats, mergeCustomFormats, useFormats } from './lib/formatStore';
@@ -21,7 +18,7 @@ import { PREVIEW_DEBOUNCE_MS } from './config/limits';
 import { useDebouncedValues } from './lib/useDebouncedValues';
 import { loadAutosave, loadFormatIds, saveAutosave, saveFormatIds } from './lib/storage';
 import { blankEvent, sampleEvent } from './schema/defaults';
-import { eventSchema, type EventData } from './schema/event';
+import type { EventData } from './schema/event';
 
 /** Drops formats that no longer exist (a custom preset may have been removed since saving). */
 function knownFormats(event: EventData): EventData {
@@ -41,18 +38,10 @@ function initialEvent(): EventData {
 
 export function App() {
   const [initial] = useState(initialEvent);
-  const methods = useForm<EventData>({
-    defaultValues: initial,
-    resolver: zodResolver(eventSchema),
-    mode: 'onChange',
-    // Focus goes to the error summary instead, which links to each field.
-    shouldFocusError: false,
-  });
+  // Validation is not RHF's job here: lib/problems.ts checks the live values (see `problems`).
+  const methods = useForm<EventData>({ defaultValues: initial });
   const preview = useDebouncedValues(methods, PREVIEW_DEBOUNCE_MS);
-  const [summary, setSummary] = useState<SummaryItem[]>([]);
-  const [checks, setChecks] = useState(0);
   const [announcement, setAnnouncement] = useState('');
-  const summaryRef = useRef<HTMLDivElement>(null);
   const [fitReports, setFitReports] = useState<Record<string, FitReport>>({});
   const [screenType, setScreenType] = useState<'png' | 'jpg'>('png');
   const exporter = useExporter(setAnnouncement);
@@ -66,12 +55,13 @@ export function App() {
     );
   }, []);
 
-  const issues = useMemo(() => {
-    const ids = Array.isArray(preview.formatIds) ? preview.formatIds : [];
-    const reports = ids.map((id) => fitReports[id]).filter((r): r is FitReport => Boolean(r));
-    return [...fitIssues(reports), ...contentIssues(preview, ids)];
-    // contentIssues reads the format store, so custom presets are a dependency too.
-  }, [preview, fitReports, formats]);
+  // The one list of problems: drives the status bar, field errors, section chips and export gating.
+  const problems = useMemo(
+    () => getProblems(preview, Object.values(fitReports)),
+    // The checks read the format store, so custom presets are a dependency too.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [preview, fitReports, formats],
+  );
 
   // Autosave every change (debounced with the preview).
   useEffect(() => {
@@ -82,7 +72,6 @@ export function App() {
   /** Replaces the working event, e.g. new, duplicate or open. */
   const load = (event: EventData, message: string, focusTitle = true) => {
     methods.reset(knownFormats(event));
-    setSummary([]);
     setFitReports({});
     setProjectStatus(message);
     setAnnouncement(message);
@@ -113,52 +102,25 @@ export function App() {
     load(parsed.event, `Opened ${file.name}.`, false);
   };
 
-  useEffect(() => {
-    if (checks > 0) summaryRef.current?.focus();
-  }, [checks]);
-
-  const blockedIds = useMemo(() => {
-    const blocking = issues.filter((i) => i.severity === 'blocking');
-    if (blocking.some((i) => i.formatId === null)) return new Set(preview.formatIds);
-    return new Set(blocking.map((i) => i.formatId!));
-  }, [issues, preview.formatIds]);
-
-  const onInvalid = (errors: FieldErrors<EventData>) => {
-    const items = summarizeErrors(errors);
-    setSummary(items);
-    setAnnouncement(`${items.length} ${items.length === 1 ? 'problem' : 'problems'} to fix.`);
-    setChecks((n) => n + 1);
+  // Buttons are disabled while a blocker applies; the exporter re-checks before rendering anyway.
+  const exportAll = () => {
+    const data = methods.getValues();
+    void exporter.run(
+      data,
+      formats.filter((f) => data.formatIds.includes(f.id)).map((format) => ({
+        format,
+        types: [format.dpi ? 'pdf' : screenType],
+      })),
+      'zip',
+    );
   };
 
-  /** Validates the form, then acts on the valid data; otherwise shows the error summary. */
-  const withValidData = (action: (data: EventData) => void | Promise<void>) =>
-    methods.handleSubmit(async (data) => {
-      setSummary([]);
-      await action(data);
-    }, onInvalid)();
-
-  const check = methods.handleSubmit(() => {
-    setSummary([]);
-    setAnnouncement('No problems found.');
-  }, onInvalid);
-
-  const exportAll = () =>
-    withValidData((data) =>
-      exporter.run(
-        data,
-        formats.filter((f) => data.formatIds.includes(f.id)).map((format) => ({
-          format,
-          types: [format.dpi ? 'pdf' : screenType],
-        })),
-        'zip',
-      ),
-    );
-
   const exportOne = (format: FormatPreset, type: FileType) =>
-    withValidData((data) => exporter.run(data, [{ format, types: [type] }], 'files'));
+    void exporter.run(methods.getValues(), [{ format, types: [type] }], 'files');
 
   return (
     <FormProvider {...methods}>
+      <ProblemsContext.Provider value={problems}>
       <a className="skip-link" href="#preview-heading">
         Skip to design and preview
       </a>
@@ -175,17 +137,16 @@ export function App() {
         />
       </header>
       <main className="app-main">
-        <form className="panel form-panel" noValidate onSubmit={check} aria-labelledby="form-heading">
+        <form
+          className="panel form-panel"
+          noValidate
+          onSubmit={(e) => e.preventDefault()}
+          aria-labelledby="form-heading"
+        >
           <h2 id="form-heading" className="visually-hidden">
             Event details
           </h2>
-          <ErrorSummary ref={summaryRef} items={summary} />
           <EventForm />
-          <div className="form-actions">
-            <button type="submit" className="button-primary">
-              Check for problems
-            </button>
-          </div>
         </form>
         <section className="panel preview-panel" aria-labelledby="preview-heading">
           <h2 id="preview-heading" tabIndex={-1}>
@@ -195,24 +156,25 @@ export function App() {
             state={exporter.state}
             screenType={screenType}
             onScreenTypeChange={setScreenType}
-            onExportAll={() => void exportAll()}
-            issues={issues}
+            onExportAll={exportAll}
+            problems={problems}
+            formatCount={preview.formatIds.length}
           />
           <DesignPanel />
           <h3 className="preview-title">Preview</h3>
           <PreviewGrid
             event={preview}
             onFit={onFit}
-            blockedIds={blockedIds}
+            problems={problems}
             exporting={exporter.state.running}
-            onDownload={(format, type) => void exportOne(format, type)}
+            onDownload={exportOne}
           />
-          <WarningsPanel issues={issues} />
         </section>
       </main>
       <div className="visually-hidden" aria-live="polite" role="status">
         {announcement}
       </div>
+      </ProblemsContext.Provider>
     </FormProvider>
   );
 }

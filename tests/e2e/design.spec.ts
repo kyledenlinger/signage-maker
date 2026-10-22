@@ -1,4 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
+import { fillAccommodations, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -58,7 +59,7 @@ test('a background image puts text on solid panels; other templates say they ski
   await expect(page.getByRole('group', { name: 'Background image focal point' })).toBeVisible();
 
   await page.getByLabel('Template (required)').selectOption('split');
-  await expect(page.getByRole('region', { name: 'Readability check' })).toContainText(
+  await expect(statusBar(page)).toContainText(
     "Split doesn't show background images",
   );
   await page.getByLabel('Template (required)').selectOption('type-only');
@@ -86,7 +87,7 @@ test('Match my images: light, dark and high contrast, unlocked by an image, alon
     for (const format of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
       await expect(card(page, format)).toHaveAttribute('data-fits', 'true');
     }
-    await expect(page.getByRole('region', { name: 'Readability check' })).not.toContainText('Theme');
+    await expect(statusBar(page)).not.toContainText('Theme');
     return root.evaluate((el) => getComputedStyle(el).backgroundColor);
   };
   const lightBg = await colorsOf('images-light');
@@ -194,18 +195,18 @@ test('one "Photo or illustration" field: transparent images are illustrations, s
   const img = card(page, 'landscape-hd').locator('.t-photo img');
   await expect(img).toHaveCSS('object-fit', 'contain');
   // No description needed for a decorative illustration.
-  await page.getByRole('button', { name: 'Check for problems' }).click();
-  await expect(page.getByRole('status')).toHaveText('No problems found.');
+  await fillAccommodations(page);
+  await expect(statusBar(page)).toContainText('Ready to export');
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 
   await page.getByRole('radio', { name: 'Photo' }).check();
   await expect(img).toHaveCSS('object-fit', 'cover');
   await expect(page.getByRole('group', { name: 'Photo focal point' })).toBeVisible();
-  await page.getByRole('button', { name: 'Check for problems' }).click();
-  await expect(page.locator('.error-summary')).toContainText('Describe the photo');
+  await expect(statusBar(page)).toContainText('The photo needs a description for alt text.');
+  await expect(page.getByLabel('Image description')).toHaveAttribute('aria-invalid', 'true');
 
   await page.getByLabel('Template (required)').selectOption('type-only');
-  await expect(page.getByRole('region', { name: 'Readability check' })).toContainText(
+  await expect(statusBar(page)).toContainText(
     "Type only doesn't show a photo or illustration",
   );
 });
@@ -237,8 +238,8 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
   // A manual pick that's hard to see gets a warning, not a block.
   await themeSelect(page).selectOption('athletics-gold');
   await page.getByLabel('Logo color').selectOption('gold');
-  await expect(page.getByRole('region', { name: 'Readability check' })).toContainText(
-    'Logo color · the gold logo is hard to see on this theme · use Automatic (black)',
+  await expect(statusBar(page)).toContainText(
+    'Logo color: the gold logo is hard to see on this theme. Use Automatic (black)',
   );
 
   await page.getByLabel('Logo color').selectOption('auto');

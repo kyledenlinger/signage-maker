@@ -1,4 +1,5 @@
-import type { Issue } from '../lib/checks';
+import type { Problem } from '../lib/problems';
+import { STATUS_BAR_ID, StatusBar } from './StatusBar';
 import type { ExportState, RowStatus } from './useExporter';
 
 const STATUS_TEXT: Record<RowStatus, string> = {
@@ -14,15 +15,19 @@ interface Props {
   screenType: 'png' | 'jpg';
   onScreenTypeChange: (type: 'png' | 'jpg') => void;
   onExportAll: () => void;
-  issues: Issue[];
+  problems: Problem[];
+  formatCount: number;
 }
 
-export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll, issues }: Props) {
-  const blocking = issues.filter((i) => i.severity === 'blocking').length;
-  const warnings = issues.length - blocking;
+/** The live status, then the zip download: disabled while anything blocks export. */
+export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll, problems, formatCount }: Props) {
+  const blocked = problems.some((p) => p.severity === 'blocker');
   return (
     <section className="export-bar" aria-labelledby="export-heading">
-      <h3 id="export-heading">Export</h3>
+      <h3 id="export-heading" className="visually-hidden">
+        Export
+      </h3>
+      <StatusBar problems={problems} formatCount={formatCount} />
       <div className="export-controls">
         <fieldset className="export-type">
           <legend>Screen formats as</legend>
@@ -42,25 +47,14 @@ export function ExportBar({ state, screenType, onScreenTypeChange, onExportAll, 
         <button
           type="button"
           className="button-primary"
-          aria-disabled={state.running || undefined}
-          onClick={() => {
-            if (!state.running) onExportAll();
-          }}
+          disabled={blocked || state.running}
+          aria-describedby={STATUS_BAR_ID}
+          onClick={onExportAll}
         >
-          Download all selected (.zip)
+          {blocked ? 'Download blocked' : state.running ? 'Downloading…' : 'Download all (.zip)'}
         </button>
       </div>
       <p className="hint">Print formats download as PDF. The zip also holds event.json and alt-text.txt.</p>
-      <p className={`export-readability ${blocking ? 'is-blocking' : ''}`}>
-        {issues.length === 0 ? (
-          'Readability check: no problems found.'
-        ) : (
-          <>
-            Readability check: {blocking} {blocking === 1 ? 'problem blocks' : 'problems block'} export, {warnings}{' '}
-            {warnings === 1 ? 'warning' : 'warnings'}. <a href="#warnings-heading">See details</a>
-          </>
-        )}
-      </p>
       {state.rows.length > 0 && (
         <ul className="export-rows">
           {state.rows.map((row) => (

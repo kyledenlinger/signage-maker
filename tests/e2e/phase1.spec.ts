@@ -28,15 +28,19 @@ test('form has no axe violations', async ({ page }) => {
   expect(results.violations).toEqual([]);
 });
 
-test('error summary state has no axe violations and links to fields', async ({ page }) => {
+test('the status bar lists blockers live and links to their fields; axe passes', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('');
-  await page.getByLabel('Location (required)').fill('x'.repeat(61));
-  await page.getByRole('button', { name: 'Check for problems' }).click();
-  const summary = page.locator('.error-summary');
-  await expect(summary).toBeFocused();
-  await expect(summary.getByRole('link')).toHaveCount(2);
-  await summary.getByRole('link', { name: /Title/ }).click();
+  const location = 'In the main reading room of the ZSR Library, on the second floor';
+  await page.getByLabel('Location (required)').fill(location.slice(0, 61));
+  const status = page.locator('#status-bar');
+  await expect(status).toHaveAttribute('role', 'status');
+  await expect(status).toContainText('3 problems block export');
+  await expect(status).toContainText('Title is required.');
+  await expect(status).toContainText('Location is 61 characters; the limit is 60.');
+  await expect(status).toContainText('The accommodations line still says [email].');
+  await status.getByRole('link', { name: 'Add a title' }).click();
   await expect(page.getByLabel('Title (required)')).toBeFocused();
+  await expect(page.getByLabel('Title (required)')).toHaveAttribute('aria-invalid', 'true');
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   expect(results.violations).toEqual([]);
 });

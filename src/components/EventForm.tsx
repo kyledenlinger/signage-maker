@@ -1,9 +1,11 @@
+import { useContext } from 'react';
 import { useFieldArray, useFormContext, useWatch } from 'react-hook-form';
 import { FIELD_LIMITS, MAX_HIGHLIGHTS } from '../config/limits';
 import { guessImageKind } from '../lib/image';
 import type { EventData } from '../schema/event';
 import { FocalPointPicker } from './FocalPointPicker';
-import { CheckboxField, errorAt, fieldId, ImageField, Section, TextField } from './fields';
+import { CheckboxField, fieldId, ImageField, Section, TextField } from './fields';
+import { ProblemsContext } from './problemsContext';
 
 export function EventForm() {
   return (
@@ -85,7 +87,8 @@ export function EventForm() {
 }
 
 function HighlightsField() {
-  const { control, register, formState } = useFormContext<EventData>();
+  const { control, register } = useFormContext<EventData>();
+  const problems = useContext(ProblemsContext);
   const { fields, append, remove } = useFieldArray({ control, name: 'highlights' });
   const values = useWatch({ control, name: 'highlights' });
   const id = fieldId('highlights');
@@ -98,7 +101,7 @@ function HighlightsField() {
       {fields.map((f, i) => {
         const name = `highlights.${i}.value` as const;
         const itemId = fieldId(name);
-        const error = errorAt(formState.errors, name);
+        const error = problems.find((p) => p.severity === 'blocker' && p.fieldId === itemId)?.message;
         const length = values?.[i]?.value?.length ?? 0;
         return (
           <div className="highlight-row" key={f.id}>

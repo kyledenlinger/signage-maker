@@ -96,21 +96,15 @@ export function contentIssues(event: EventData, formatIds: string[]): Issue[] {
   const formats = allFormats().filter((f) => formatIds.includes(f.id));
   const chosen = findTemplate(event.templateId);
 
+  // Hard limits are schema rules (lib/problems.ts); here, only the softer "recommended" counts.
   for (const { field, limit } of TEXT_FIELDS) {
     const length = String(event[field] ?? '').length;
-    if (length > limit.max) {
-      out.push(issue('blocking', null, field, `${length} characters, over the ${limit.max} limit`, `shorten by ${length - limit.max} characters`));
-    } else if (limit.recommended && length > limit.recommended) {
+    if (limit.recommended && length > limit.recommended && length <= limit.max) {
       out.push(
         issue('warning', null, field, `${length} characters, over the recommended ${limit.recommended}`, `shorten by ${length - limit.recommended} characters to read at a glance`),
       );
     }
   }
-  event.highlights.forEach((h, i) => {
-    if (h.value.length > FIELD_LIMITS.highlight.max) {
-      out.push(issue('blocking', null, `highlights.${i}.value`, `over the ${FIELD_LIMITS.highlight.max}-character limit`, `shorten by ${h.value.length - FIELD_LIMITS.highlight.max} characters`));
-    }
-  });
 
   const letters = event.title.replace(/[^\p{L}]/gu, '');
   if (letters.length > 3 && letters === letters.toUpperCase()) {

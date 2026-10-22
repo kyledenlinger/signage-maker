@@ -4,7 +4,7 @@ import { useFormats } from '../lib/formatStore';
 import type { EventData } from '../schema/event';
 import { TEMPLATES } from '../templates/registry';
 import { CustomSizes } from './CustomSizes';
-import { errorAt, fieldId, SelectField } from './fields';
+import { fieldId, SelectField, useFieldError } from './fields';
 import { FontFields } from './FontFields';
 import { CoSponsorLogos, LogoFields } from './LogoFields';
 import { ThemeField } from './ThemeField';
@@ -111,9 +111,9 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
 }
 
 function FormatsField() {
-  const { register, formState } = useFormContext<EventData>();
+  const { register } = useFormContext<EventData>();
   const id = fieldId('formatIds');
-  const error = errorAt(formState.errors, 'formatIds');
+  const error = useFieldError('formatIds');
   const formats = useFormats();
   return (
     <>

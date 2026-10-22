@@ -12,6 +12,12 @@
   --warning: #7a4d00;
   --focus: #1a5fb4;
   --radius: 6px;
+  --danger: #b42318;
+  --danger-tint: #fef3f2;
+  --danger-border: #f3b4ae;
+  --success: #1e7a3c;
+  --success-tint: #edf7ef;
+  --success-border: #a7d7b3;
   color-scheme: light;
 }
 
@@ -27,6 +33,12 @@
     --error: #ff8a8a;
     --warning: #f0c060;
     --focus: #8ab4f8;
+    --danger: #ff9b91;
+    --danger-tint: #3a1714;
+    --danger-border: #a8443a;
+    --success: #8fd6a4;
+    --success-tint: #12301c;
+    --success-border: #3f7d52;
     color-scheme: dark;
   }
 }
@@ -676,4 +688,75 @@ button {
 }
 .warnings {
   margin-top: 1rem;
+}
+
+/* Status bar: red when export is blocked, green when ready. Icon and words carry it too. */
+.status-bar {
+  border: 2px solid var(--success-border);
+  background: var(--success-tint);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.75rem;
+}
+.status-bar.is-blocked {
+  border-color: var(--danger-border);
+  background: var(--danger-tint);
+}
+.status-bar h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--success);
+}
+.status-bar.is-blocked h3 {
+  color: var(--danger);
+}
+.status-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  background: currentColor;
+  font-size: 0.85rem;
+}
+.status-icon {
+  /* The glyph shows in the surface color, cut out of the colored disc. */
+  -webkit-text-fill-color: var(--surface);
+}
+.status-list {
+  margin: 0.4rem 0 0;
+  padding-left: 1.25rem;
+}
+.status-list a {
+  color: var(--accent-link, inherit);
+  font-weight: 700;
+}
+.status-summary {
+  margin: 0.3rem 0 0;
+}
+.status-warnings {
+  margin-top: 0.5rem;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+}
+.status-warnings-title {
+  margin: 0;
+  font-weight: 700;
+}
+.format-status {
+  margin-left: 0.4rem;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--success);
+}
+.format-status.is-blocked {
+  color: var(--danger);
+}
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }

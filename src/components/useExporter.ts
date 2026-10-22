@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FileType, FormatPreset } from '../config/formats';
 import { exportAltText } from '../lib/altText';
-import { contentIssues, fitIssues, type Issue } from '../lib/checks';
+import { fitIssues } from '../lib/checks';
+import { blockersFor, getProblems } from '../lib/problems';
 import { exportFileName, zipFileName } from '../lib/filenames';
 import { customFormats } from '../lib/formatStore';
 import { projectJson } from '../lib/project';
@@ -35,10 +36,6 @@ const loadExport = () => import('../lib/export');
 
 function prefetchExport() {
   void loadExport().then(({ prefetchFonts }) => prefetchFonts());
-}
-
-function reason(issue: Issue): string {
-  return `${issue.fieldLabel}: ${issue.problem}`;
 }
 
 function plural(n: number, word: string) {
@@ -77,21 +74,16 @@ export function useExporter(announce: (message: string) => void) {
       announce(`Exporting ${plural(jobs.length, 'format')}…`);
 
       const { downloadBlob, encode, renderFormat, zipFiles } = await loadExport();
-      const issues = contentIssues(
-        event,
-        jobs.map((j) => j.format.id),
-      );
+      const problems = getProblems(event);
       const files: { name: string; data: Blob }[] = [];
       const skipped: string[] = [];
       const failed: string[] = [];
 
       for (const { format, types } of jobs) {
-        const blockers = issues.filter(
-          (i) => i.severity === 'blocking' && (i.formatId === null || i.formatId === format.id),
-        );
+        const blockers = blockersFor(problems, format.id);
         if (blockers.length) {
-          setRow(format.id, { status: 'skipped', detail: reason(blockers[0]) });
-          skipped.push(`${format.name} (${reason(blockers[0])})`);
+          setRow(format.id, { status: 'skipped', detail: blockers[0].message });
+          skipped.push(`${format.name} (${blockers[0].message})`);
           continue;
         }
         setRow(format.id, { status: 'rendering' });
