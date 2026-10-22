@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { fillAccommodations, statusBar } from './helpers';
+import { fillAccommodations, revealBackground, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -26,6 +26,7 @@ async function uploadBackground(page: Page) {
     ctx.fillRect(1600, 200, 600, 600);
     return c.toDataURL('image/png').split(',')[1];
   });
+  await revealBackground(page);
   await page.locator('#field-background').setInputFiles({
     name: 'backdrop.png',
     mimeType: 'image/png',
@@ -181,8 +182,8 @@ async function uploadFeatured(page: Page, transparent: boolean) {
 }
 
 test('one "Photo or illustration" field: transparent images are illustrations, shown whole', async ({ page }) => {
-  await expect(page.getByRole('region', { name: 'Photo or illustration' })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Background image' })).toBeVisible();
+  await expect(page.getByRole('group', { name: /^2\. Image/ })).toBeVisible();
+  await expect(page.locator('#field-image-label')).toHaveText('Photo or illustration');
   await expect(page.getByLabel('Illustration', { exact: true })).toHaveCount(0);
 
   await uploadFeatured(page, true);
@@ -254,10 +255,11 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
 
 test('design options sit in one panel below the preview; it can collapse', async ({ page }) => {
   const design = page.locator('details.design');
-  for (const label of ['Template (required)', 'Theme (required)', 'Title font', 'Date style', 'Weekday', 'Highlights style', 'Logo version', 'Co-sponsor logos']) {
+  for (const label of ['Template (required)', 'Theme (required)', 'Title font', 'Date style', 'Weekday', 'Highlights style', 'Logo version']) {
     await expect(design.getByLabel(label)).toBeVisible();
   }
   await expect(design.getByRole('group', { name: /Formats/ })).toBeVisible();
+  await expect(design.getByRole('button', { name: 'Choose a file: Co-sponsor logos' })).toBeVisible();
   // None of them are left in the event form.
   await expect(page.locator('form.form-panel select, form.form-panel input[type="file"][multiple]')).toHaveCount(0);
 

@@ -5,6 +5,7 @@ import { readImageFile } from '../lib/image';
 import { COLORWAYS, colorwayReadable, LOCKUPS, logoUrl, pickColorway, type Colorway } from '../config/logos';
 import { resolveTheme } from '../config/themes';
 import type { EventData } from '../schema/event';
+import { DropZone } from './DropZone';
 import { CheckboxField, fieldId, SelectField } from './fields';
 
 /** The approved ZSR Library logo: which version, its layout, and its colorway (automatic by default). */
@@ -66,66 +67,37 @@ export function CoSponsorLogos() {
   const { control, setValue } = useFormContext<EventData>();
   const logos = useWatch({ control, name: 'logos' });
   const [readError, setReadError] = useState<string>();
-  const id = fieldId('logos');
 
-  async function onFiles(files: FileList | null) {
+  async function onFiles(files: File[]) {
     setReadError(undefined);
-    if (!files?.length) return;
     try {
       const room = MAX_LOGOS - logos.length;
-      const added = await Promise.all(Array.from(files).slice(0, room).map(readImageFile));
+      const added = await Promise.all(files.slice(0, room).map(readImageFile));
       setValue('logos', [...logos, ...added], { shouldDirty: true, shouldValidate: true });
-      if (files.length > room) setReadError(`Only ${MAX_LOGOS} extra logos fit; the rest were not added.`);
+      if (files.length > room) setReadError(`Only ${MAX_LOGOS} co-sponsor logos fit; the rest were not added.`);
     } catch (e) {
       setReadError(e instanceof Error ? e.message : 'This file could not be read.');
     }
   }
 
   return (
-    <div className="field">
-      <label htmlFor={id}>Co-sponsor logos</label>
-      <p className="hint" id={`${id}-hint`}>
-        Up to {MAX_LOGOS}, SVG or PNG with a transparent background. Shown beside the ZSR Library logo.
-      </p>
-      <input
-        id={id}
-        type="file"
-        accept="image/svg+xml,image/png"
-        multiple
-        disabled={logos.length >= MAX_LOGOS}
-        aria-describedby={[`${id}-hint`, readError && `${id}-error`].filter(Boolean).join(' ')}
-        onChange={(e) => {
-          void onFiles(e.target.files);
-          e.target.value = '';
-        }}
-      />
-      {logos.length > 0 && (
-        <ul className="file-list">
-          {logos.map((logo, i) => (
-            <li key={i}>
-              {logo.name}
-              <button
-                type="button"
-                className="link-button"
-                onClick={() =>
-                  setValue(
-                    'logos',
-                    logos.filter((_, j) => j !== i),
-                    { shouldDirty: true, shouldValidate: true },
-                  )
-                }
-              >
-                Remove<span className="visually-hidden"> {logo.name}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-      {readError && (
-        <p className="field-error" id={`${id}-error`}>
-          {readError}
-        </p>
-      )}
-    </div>
+    <DropZone
+      id={fieldId('logos')}
+      label="Co-sponsor logos"
+      hint={`Up to ${MAX_LOGOS}, SVG or PNG with a transparent background. Shown beside the ZSR Library logo.`}
+      accept="image/svg+xml,image/png"
+      multiple
+      max={MAX_LOGOS}
+      files={logos}
+      error={readError}
+      onFiles={(files) => void onFiles(files)}
+      onRemove={(i) =>
+        setValue(
+          'logos',
+          logos.filter((_, j) => j !== i),
+          { shouldDirty: true, shouldValidate: true },
+        )
+      }
+    />
   );
 }

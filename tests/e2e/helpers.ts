@@ -15,3 +15,15 @@ export async function fillAccommodations(page: Page) {
 export async function selectFormat(page: Page, formatId: string) {
   await page.locator(`.format-button[data-format="${formatId}"]`).click();
 }
+
+/** Opens step 4, Details (collapsed by default). */
+export async function openDetails(page: Page) {
+  const details = page.locator('details.form-details');
+  if (!(await details.evaluate((d: HTMLDetailsElement) => d.open))) await details.locator('> summary').click();
+}
+
+/** Shows the background image upload (behind "Use a full background image instead"). */
+export async function revealBackground(page: Page) {
+  const link = page.getByRole('button', { name: 'Use a full background image instead' });
+  if (await link.count()) await link.click();
+}

@@ -3,6 +3,7 @@ import { useFormContext, useWatch, type Path } from 'react-hook-form';
 import type { CharLimit } from '../config/limits';
 import { IMAGE_PX } from '../config/limits';
 import { isVector, readImageFile } from '../lib/image';
+import { DropZone } from './DropZone';
 import { useFieldBlocker } from './problemsContext';
 import type { EventData, ImageAsset } from '../schema/event';
 
@@ -159,12 +160,11 @@ export function ImageField({ name, label, accept, hint, checkResolution, onLoade
   const { control, setValue } = useFormContext<EventData>();
   const asset = useWatch({ control, name }) as ImageAsset | null;
   const [readError, setReadError] = useState<string>();
-  const id = fieldId(name);
+  const problem = useFieldError(name);
   const lowRes = checkResolution && asset && !isVector(asset) && asset.originalLongEdge < IMAGE_PX.warnBelow;
 
-  async function onChange(file: File | undefined) {
+  async function onFiles([file]: File[]) {
     setReadError(undefined);
-    if (!file) return;
     try {
       const loaded = await readImageFile(file);
       setValue(name, loaded, { shouldDirty: true, shouldValidate: true });
@@ -175,44 +175,21 @@ export function ImageField({ name, label, accept, hint, checkResolution, onLoade
   }
 
   return (
-    <div className="field">
-      <Label id={id} label={label} />
-      {hint && (
-        <p className="hint" id={`${id}-hint`}>
-          {hint}
-        </p>
-      )}
-      <input
-        id={id}
-        type="file"
-        accept={accept}
-        aria-describedby={describedBy(hint && `${id}-hint`, asset && `${id}-status`, readError && `${id}-error`)}
-        onChange={(e) => {
-          void onChange(e.target.files?.[0]);
-          e.target.value = '';
-        }}
-      />
-      {asset && (
-        <div className="file-status" id={`${id}-status`}>
-          <span>
-            {asset.name} ({asset.width} × {asset.height} px)
-          </span>
-          <button
-            type="button"
-            className="link-button"
-            onClick={() => setValue(name, null, { shouldDirty: true, shouldValidate: true })}
-          >
-            Remove<span className="visually-hidden"> {label.toLowerCase()}</span>
-          </button>
-          {lowRes && (
-            <p className="field-warning">
-              This image is under {IMAGE_PX.warnBelow} px on its long edge and may look soft on large screens.
-            </p>
-          )}
-        </div>
-      )}
-      <ErrorText id={`${id}-error`} message={readError} />
-    </div>
+    <DropZone
+      id={fieldId(name)}
+      label={label}
+      hint={hint}
+      accept={accept}
+      files={asset ? [asset] : []}
+      error={readError ?? problem}
+      note={
+        lowRes
+          ? `This image is under ${IMAGE_PX.warnBelow} px on its long edge and may look soft on large screens.`
+          : undefined
+      }
+      onFiles={(files) => void onFiles(files)}
+      onRemove={() => setValue(name, null, { shouldDirty: true, shouldValidate: true })}
+    />
   );
 }
 

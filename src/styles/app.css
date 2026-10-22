@@ -905,3 +905,231 @@ button:disabled {
     padding-bottom: 0.5rem;
   }
 }
+
+/* ---------- Numbered form cards ---------- */
+
+.event-form {
+  display: grid;
+  gap: 1rem;
+}
+.form-panel {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.form-card {
+  margin: 0;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  padding: 1rem;
+}
+.form-card.is-blocked {
+  border: 2px solid var(--danger);
+}
+.form-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.6rem;
+  margin-bottom: 0.75rem;
+}
+.step-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--surface);
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: none;
+}
+.form-card-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex: 1;
+  min-width: 0;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  color: var(--text-muted);
+}
+.chip--done {
+  background: var(--success-tint);
+  border-color: var(--success-border);
+  color: var(--success);
+}
+.chip--fix {
+  background: var(--danger-tint);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+.reveal-link {
+  background: none;
+  border: none;
+  padding: 0.25rem 0;
+  min-height: var(--target);
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.form-details > summary {
+  cursor: pointer;
+  min-height: var(--target);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  color: var(--accent);
+  list-style-position: inside;
+}
+.form-details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+/* Highlights as editable chips. */
+.chips {
+  list-style: none;
+  margin: 0.5rem 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.chip-edit {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.15rem 0.25rem 0.15rem 0.5rem;
+  border: 1.5px solid var(--border-input);
+  border-radius: 999px;
+  background: var(--surface-muted);
+  max-width: 100%;
+}
+.chip-edit.is-invalid {
+  border: 2px solid var(--danger);
+}
+.chip-edit input {
+  min-height: 2.25rem;
+  margin: 0;
+  padding: 0.2rem 0.25rem;
+  border: none;
+  background: transparent;
+  width: auto;
+  max-width: 14rem;
+  display: inline-block;
+}
+.chip-count {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+.chip-count.is-over {
+  color: var(--danger);
+  font-weight: 700;
+}
+.chip-remove {
+  min-width: 2.25rem;
+  min-height: 2.25rem;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text);
+}
+.chip-error {
+  flex-basis: 100%;
+  padding: 0 0.5rem 0.25rem;
+}
+
+/* ---------- Drop zones ---------- */
+
+.drop-label {
+  display: block;
+  font-weight: 600;
+}
+.drop-zone {
+  margin-top: 0.4rem;
+  border: 1.5px dashed var(--border-input);
+  border-radius: var(--radius-option);
+  background: var(--surface-muted);
+  padding: 0.75rem;
+}
+.drop-zone.is-dragging {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.drop-zone.is-invalid {
+  border: 2px solid var(--danger);
+}
+.drop-prompt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+.drop-files {
+  list-style: none;
+  margin: 0 0 0.6rem;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.drop-file {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.drop-thumb {
+  width: 64px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 6px;
+  background:
+    repeating-conic-gradient(#d4d7dd 0% 25%, #ffffff 0% 50%) 50% / 12px 12px;
+}
+.drop-file-text {
+  display: grid;
+  flex: 1;
+  min-width: 8rem;
+  line-height: 1.3;
+}
+.drop-file-name {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+/* Flex summaries lose the native marker: draw one. */
+.form-details > summary,
+.design > summary {
+  list-style: none;
+}
+.form-details > summary::-webkit-details-marker,
+.design > summary::-webkit-details-marker {
+  display: none;
+}
+.form-details > summary::before,
+.design > summary::before {
+  content: '▸';
+  display: inline-block;
+  width: 1rem;
+  color: var(--text-muted);
+  transition: transform 0.15s;
+}
+.form-details[open] > summary::before,
+.design[open] > summary::before {
+  transform: rotate(90deg);
+}

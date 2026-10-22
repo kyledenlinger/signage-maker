@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
-import { fillAccommodations } from './helpers';
+import { fillAccommodations, openDetails } from './helpers';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
 
@@ -37,12 +37,14 @@ test('reload restores the last project', async ({ page }) => {
   await title(page).fill('Banned Books Week');
   await page.getByLabel('Template (required)').selectOption('band');
   await page.getByLabel('Theme (required)').selectOption('light');
+  await openDetails(page);
   await page.getByLabel('Highlight 1', { exact: true }).fill('Read-out');
   await settle(page);
   await page.reload();
   await expect(title(page)).toHaveValue('Banned Books Week');
   await expect(page.getByLabel('Template (required)')).toHaveValue('band');
   await expect(page.getByLabel('Theme (required)')).toHaveValue('light');
+  await openDetails(page);
   await expect(page.getByLabel('Highlight 1', { exact: true })).toHaveValue('Read-out');
   await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveText('Banned Books Week');
   await expect(page.getByText('Changes are saved in this browser automatically.')).toBeVisible();
@@ -81,8 +83,8 @@ test('duplicate keeps template, theme, logos and accommodations; clears the even
     c.getContext('2d')!.fillRect(0, 0, 400, 100);
     return c.toDataURL('image/png').split(',')[1];
   });
-  await page.getByLabel('Co-sponsor logos').setInputFiles({ name: 'cosponsor.png', mimeType: 'image/png', buffer: Buffer.from(logo, 'base64') });
-  await expect(page.locator('.file-list')).toContainText('cosponsor.png');
+  await page.locator('#field-logos').setInputFiles({ name: 'cosponsor.png', mimeType: 'image/png', buffer: Buffer.from(logo, 'base64') });
+  await expect(page.locator('.drop-files')).toContainText('cosponsor.png');
 
   await page.getByRole('button', { name: 'Duplicate event' }).click();
   await page.getByRole('group', { name: 'Duplicate event' }).getByRole('button', { name: 'Duplicate event' }).click();
@@ -93,7 +95,7 @@ test('duplicate keeps template, theme, logos and accommodations; clears the even
   await expect(page.getByLabel('Template (required)')).toHaveValue('split');
   await expect(page.getByLabel('Theme (required)')).toHaveValue('high-contrast');
   await expect(page.getByRole('textbox', { name: 'Accommodations line' })).toHaveValue('Accessibility requests: zsr@example.edu');
-  await expect(page.locator('.file-list')).toContainText('cosponsor.png');
+  await expect(page.locator('.drop-files')).toContainText('cosponsor.png');
 });
 
 test('a saved project reopens identically, with its photo and custom size', async ({ page }, testInfo) => {
