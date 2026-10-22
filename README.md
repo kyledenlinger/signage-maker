@@ -55,10 +55,10 @@ Campus screens often show a slide for only about 10 seconds, so the panel warns 
 
 ## Saving your work
 
-- **Autosave:** your current event is saved in this browser as you work and comes back when you reopen the page. Very large images may not fit in browser storage; if so, the app tells you, and you should use *Save project*.
-- **Save project** downloads a `.signage.json` file with everything in it, images included. **Open project** loads one back.
-- **Duplicate event** starts the next event in a series: it keeps the template, theme, logos and accommodations line and clears the event details.
-- **Start new event** clears everything. Both ask first.
+- **Autosave:** your current event is saved in this browser as you work (the header says **Saved in this browser**) and comes back when you reopen the page. It is only in this browser: use **Save project file** to keep a copy or move to another computer. Very large images may not fit in browser storage; if so, the app tells you, and you should use *Save project*.
+- **Save project file** downloads a `.signage.json` file with everything in it, images included. **Open project file** loads one back.
+- **Next in this series** starts the next event in a series: it keeps the template, theme, logos and accommodations line and clears the event details.
+- **New event** clears everything. Both ask first.
 
 ## Custom sizes
 

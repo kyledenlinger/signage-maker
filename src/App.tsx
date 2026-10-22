@@ -103,7 +103,7 @@ export function App() {
   const startNew = () => load(blankEvent(methods.getValues('formatIds')), 'Started a new event.');
 
   const duplicate = () =>
-    load(duplicateEvent(methods.getValues()), 'Duplicated: kept the template, theme, logos and accommodations line.');
+    load(duplicateEvent(methods.getValues()), 'Started the next in this series: kept the template, theme, logos and accommodations line.');
 
   const saveProject = () => {
     const event = methods.getValues();

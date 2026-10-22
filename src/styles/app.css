@@ -487,6 +487,10 @@ button:disabled {
   margin: 0;
   color: var(--header-muted);
   font-size: 0.9rem;
+  cursor: help;
+}
+.project-status.is-off {
+  cursor: auto;
 }
 
 /* ---------- Status and export ---------- */

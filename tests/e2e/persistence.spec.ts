@@ -33,7 +33,7 @@ async function addCustomSize(page: Page, name: string, width: number, height: nu
 }
 
 async function saveProject(page: Page) {
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save project' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save project file' }).click()]);
   return download;
 }
 
@@ -52,15 +52,18 @@ test('reload restores the last project', async ({ page }) => {
   await openDetails(page);
   await expect(page.getByLabel('Highlight 1', { exact: true })).toHaveValue('Read-out');
   await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveText('Banned Books Week');
-  await expect(page.getByText('Changes are saved in this browser automatically.')).toBeVisible();
+  const saved = page.locator('.project-status');
+  await expect(saved).toContainText('Saved in this browser');
+  await expect(saved).toHaveAttribute('title', 'Only in this browser. Use Save project file to keep a copy or move to another computer.');
+  await expect(page.getByRole('button', { name: 'Save project file' })).toHaveAccessibleDescription('Downloads a .json file you can reopen later.');
 });
 
-test('start new event asks first, then clears the form and stays cleared', async ({ page }) => {
-  const trigger = page.getByRole('button', { name: 'Start new event' });
+test('New event asks first, then clears the form and stays cleared', async ({ page }) => {
+  const trigger = page.getByRole('button', { name: 'New event' });
   await trigger.click();
-  const confirm = page.getByRole('group', { name: 'Start new event' });
+  const confirm = page.getByRole('group', { name: 'New event' });
   await expect(confirm).toBeVisible();
-  await expect(confirm.getByRole('button', { name: 'Start new event' })).toBeFocused();
+  await expect(confirm.getByRole('button', { name: 'New event' })).toBeFocused();
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 
   await confirm.getByRole('button', { name: 'Cancel' }).click();
@@ -68,7 +71,7 @@ test('start new event asks first, then clears the form and stays cleared', async
   await expect(title(page)).toHaveValue('Halloween Game Night');
 
   await trigger.click();
-  await page.getByRole('group', { name: 'Start new event' }).getByRole('button', { name: 'Start new event' }).click();
+  await page.getByRole('group', { name: 'New event' }).getByRole('button', { name: 'New event' }).click();
   await expect(title(page)).toHaveValue('');
   await expect(title(page)).toBeFocused();
   await expect(page.getByLabel('Location (required)')).toHaveValue('');
@@ -78,7 +81,7 @@ test('start new event asks first, then clears the form and stays cleared', async
   await expect(title(page)).toHaveValue('');
 });
 
-test('duplicate keeps template, theme, logos and accommodations; clears the event', async ({ page }) => {
+test('Next in this series keeps template, theme, logos and accommodations; clears the event', async ({ page }) => {
   await chooseTemplate(page, 'split');
   await chooseTheme(page, 'high-contrast');
   await page.getByRole('textbox', { name: 'Accommodations line' }).fill('Accessibility requests: zsr@example.edu');
@@ -92,8 +95,8 @@ test('duplicate keeps template, theme, logos and accommodations; clears the even
   await page.locator('#field-logos').setInputFiles({ name: 'cosponsor.png', mimeType: 'image/png', buffer: Buffer.from(logo, 'base64') });
   await expect(page.locator('.drop-files')).toContainText('cosponsor.png');
 
-  await page.getByRole('button', { name: 'Duplicate event' }).click();
-  await page.getByRole('group', { name: 'Duplicate event' }).getByRole('button', { name: 'Duplicate event' }).click();
+  await page.getByRole('button', { name: 'Next in this series' }).click();
+  await page.getByRole('group', { name: 'Next in this series' }).getByRole('button', { name: 'Next in this series' }).click();
 
   await expect(title(page)).toHaveValue('');
   await expect(title(page)).toBeFocused();
