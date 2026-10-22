@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
   await page.evaluate(() => localStorage.clear());
   await page.reload();
   await openFormats(page);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await openMoreOptions(page);
   await openFormats(page);
 });

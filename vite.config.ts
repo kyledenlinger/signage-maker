@@ -6,8 +6,9 @@ export default defineConfig({
   base: './',
   plugins: [react()],
   // The export libraries load lazily, so the dev server would only find them mid-session and
-  // reload the page to re-bundle (which also broke tests that were mid-load). Bundle them up front.
+  // reload the page to re-bundle them. Bundle them up front.
   optimizeDeps: {
+    entries: ['index.html', 'gallery.html'],
     include: ['html-to-image', 'jspdf', 'jszip', 'qrcode'],
   },
   build: {

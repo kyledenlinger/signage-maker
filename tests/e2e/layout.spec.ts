@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
 });
 
 const stageSign = (page: import('@playwright/test').Page) => page.locator('.stage .scaled-sign');

@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
 });
 
 test('the three default previews render', async ({ page }) => {

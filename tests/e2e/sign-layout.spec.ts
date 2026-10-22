@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
 });
 
 const stage = (page: Page) => page.locator('.stage .tpl');
@@ -87,7 +87,7 @@ test('the QR code is always in a corner; at the bottom, it is level with the log
   for (const template of ['showcase', 'split', 'band', 'type-only', 'frame']) {
     for (const format of ['landscape-hd', 'portrait-hd', 'square', 'letter-poster']) {
       await page.goto(`/gallery.html?template=${template}&format=${format}&image=1&qr=1&fixture=sample&scale=auto`);
-      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => document.fonts.ready.then(() => true));
       await expect(page.locator('[data-cell]')).toHaveAttribute('data-fits', 'true');
       const r = await page.locator('[data-cell] .tpl').evaluate((root) => {
         const rect = (el: Element) => el.getBoundingClientRect();

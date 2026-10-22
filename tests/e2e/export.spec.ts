@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
   await page.evaluate(() => localStorage.clear());
   await page.reload();
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await fillAccommodations(page);
   await expect(statusBar(page)).toContainText('Ready to export');
   await openMoreOptions(page);
@@ -172,7 +172,7 @@ async function rowProfileDiff(page: Page, a: string, b: string): Promise<number>
 async function previewShot(page: Page, override = '', fonts = '') {
   await page.setViewportSize({ width: 2000, height: 1200 });
   await page.goto(`/gallery.html?template=showcase&format=landscape-hd&theme=black-gold&image=0&qr=1&fixture=sample&scale=1${fonts}`);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   if (override) await page.addStyleTag({ content: override });
   await expect(page.locator('[data-cell]')).toHaveAttribute('data-fits', 'true');
   return (await page.locator('[data-cell] > div').screenshot()).toString('base64');

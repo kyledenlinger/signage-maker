@@ -17,7 +17,7 @@ const PRESETS = [
 
 async function openMatrix(page: Page, theme: string, fixture: string, extra = '') {
   await page.goto(`/gallery.html?matrix=1&theme=${theme}&fixture=${fixture}&scale=0.12${extra}`);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready.then(() => true));
   await expect(page.locator('[data-cell][data-fits="pending"]')).toHaveCount(0);
   // 5 templates × 3 orientation classes × image on/off × QR on/off
   await expect(page.locator('[data-cell]')).toHaveCount(60);
@@ -204,7 +204,7 @@ test.describe('visual snapshots', () => {
     for (const preset of PRESETS) {
       test(`${template} · ${preset}`, async ({ page }) => {
         await page.goto(`/gallery.html?template=${template}&format=${preset}&image=1&qr=1&fixture=sample&scale=auto`);
-        await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(() => document.fonts.ready.then(() => true));
         const cell = page.locator('[data-cell]');
         await expect(cell).toHaveAttribute('data-fits', 'true');
         await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}.png`, { maxDiffPixelRatio: 0.01 });
@@ -220,7 +220,7 @@ test.describe('visual snapshots', () => {
   ]) {
     test(`${template} · ${preset} · illustration`, async ({ page }) => {
       await page.goto(`/gallery.html?template=${template}&format=${preset}&image=1&ill=1&qr=1&fixture=sample&scale=auto`);
-      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(() => document.fonts.ready.then(() => true));
       const cell = page.locator('[data-cell]');
       await expect(cell).toHaveAttribute('data-fits', 'true');
       await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}-illustration.png`, { maxDiffPixelRatio: 0.01 });
@@ -239,7 +239,7 @@ test.describe('visual snapshots', () => {
         await page.goto(
           `/gallery.html?template=${template}&format=${preset}&theme=${theme}&image=0&qr=1&bg=1&fixture=sample&scale=auto`,
         );
-        await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(() => document.fonts.ready.then(() => true));
         const cell = page.locator('[data-cell]');
         await expect(cell).toHaveAttribute('data-fits', 'true');
         await expect(cell.locator('> div')).toHaveScreenshot(`${template}-${preset}-bg-${theme}.png`, {
