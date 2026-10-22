@@ -5,6 +5,7 @@ import type { Theme } from '../config/themes';
 import { fitText, type SlotSizes } from '../lib/fitText';
 import type { EventData } from '../schema/event';
 import { findTemplate, resolveTemplate } from './registry';
+import { markPlaceholders, stackHighlights } from './shared/parts';
 import { PLACEHOLDER_IMAGE } from './shared/placeholder';
 import { SLOT_HIERARCHY, type SlotName } from './types';
 
@@ -148,10 +149,12 @@ export function TemplateRenderer({ event: given, theme, format, onFit, preview =
       unit,
       apply: (sizes) => {
         for (const name of SLOT_HIERARCHY) host.style.setProperty(`--fs-${name}`, `${sizes[name]}px`);
+        stackHighlights(root);
       },
       overflowing: () => [...new Set(overflowing().flatMap((o) => slotsIn(o.region)))],
     });
 
+    if (preview) markPlaceholders(root);
     const regions = overflowing();
     // Report the innermost regions; the root only when nothing inside it overflows.
     const specific = regions.filter((o) => o.region !== root);
@@ -162,7 +165,7 @@ export function TemplateRenderer({ event: given, theme, format, onFit, preview =
       SLOT_HIERARCHY.map((name) => [name, Math.round((result.sizes[name] / unit) * 100) / 100]),
     ) as SlotSizes;
     onFitRef.current?.({ formatId: format.id, fits: result.fits, sizesU, problems });
-  }, [manifest, format]);
+  }, [manifest, format, preview]);
 
   useLayoutEffect(run, [run, event, theme]);
 
@@ -184,7 +187,7 @@ export function TemplateRenderer({ event: given, theme, format, onFit, preview =
   return (
     <div
       ref={hostRef}
-      className="tpl-host"
+      className={`tpl-host ${preview ? 'tpl-host--preview' : ''}`}
       data-template={manifest.id}
       style={{ width: format.width, height: format.height }}
       onLoadCapture={run}

@@ -62,15 +62,41 @@ export function WhenWhere({ content, className = '' }: { content: SignContent; c
   );
 }
 
-/** Tagline, highlights, description, call to action and URL, in that order. */
-export function Details({ content, className = '' }: { content: SignContent; className?: string }) {
+/** The tagline on its own, for layouts that set it directly under the title. */
+export function Subtitle({ content, className = '' }: { content: SignContent; className?: string }) {
+  if (!content.subtitle) return null;
+  return (
+    <div className={`t-subtitle ${className}`} data-fit-region>
+      <div className="t-card t-body" data-slot="body" data-field="subtitle">
+        {content.subtitle}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tagline, highlights, description, call to action and URL, in that order. Highlights are
+ * unbreakable units with the separator leading each next item, so a wrap never strands a dot;
+ * past two lines they stack as a list (see stackHighlights).
+ */
+export function Details({
+  content,
+  className = '',
+  subtitle = true,
+}: {
+  content: SignContent;
+  className?: string;
+  /** False when the layout shows the subtitle elsewhere. */
+  subtitle?: boolean;
+}) {
+  const showSubtitle = subtitle && Boolean(content.subtitle);
   const empty =
-    !content.subtitle && !content.highlights.length && !content.description && !content.callToAction && !content.url;
+    !showSubtitle && !content.highlights.length && !content.description && !content.callToAction && !content.url;
   return (
     <div className={`t-details ${className}`} data-fit-region>
       {!empty && (
         <div className="t-card t-details-body">
-          {content.subtitle && (
+          {showSubtitle && (
             <div className="t-body" data-slot="body" data-field="subtitle">
               {content.subtitle}
             </div>
@@ -135,8 +161,9 @@ export function Footer({
                 {content.credit}
               </div>
             )}
+            {/* At body size, like the URL: it's how people ask for access, not fine print. */}
             {content.accommodations && (
-              <div data-slot="smallPrint" data-field="accommodations">
+              <div className="t-access" data-slot="body" data-field="accommodations">
                 {content.accommodations}
               </div>
             )}
@@ -219,4 +246,28 @@ export function Photo({ content, className = '' }: { content: SignContent; class
       <img src={content.image.dataUrl} alt="" style={whole ? undefined : { objectPosition: `${x * 100}% ${y * 100}%` }} />
     </div>
   );
+}
+
+/**
+ * Highlights that run to three or more lines read better as a list: stack them. Called after each
+ * font-size pass, since the line count depends on the size.
+ */
+export function stackHighlights(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('.t-highlights').forEach((list) => {
+    list.classList.remove('t-highlights--stacked');
+    const first = list.firstElementChild;
+    if (!first || list.children.length < 2) return;
+    const lineHeight = parseFloat(getComputedStyle(first).lineHeight);
+    if (lineHeight > 0 && Math.round(list.offsetHeight / lineHeight) >= 3) list.classList.add('t-highlights--stacked');
+  });
+}
+
+/** Text that still holds a "[...]" placeholder. */
+const PLACEHOLDER_TEXT = /\[[^\]]*\]/;
+
+/** Marks fields still holding a "[...]" placeholder. Preview only: export never calls this. */
+export function markPlaceholders(root: HTMLElement) {
+  root.querySelectorAll<HTMLElement>('[data-field]').forEach((el) => {
+    el.toggleAttribute('data-placeholder', PLACEHOLDER_TEXT.test(el.textContent ?? ''));
+  });
 }

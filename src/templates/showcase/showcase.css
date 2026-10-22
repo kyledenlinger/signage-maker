@@ -52,34 +52,36 @@
 }
 
 /*
- * Portrait and square: title; image band with the QR beside it; then the date badge with
- * time and location; then the details.
+ * Portrait and square: title with the subtitle right under it; image band with the QR beside it;
+ * then the date badge with time and location; then the details. Without an image, leftover space
+ * collects above the footer rather than mid-sign.
  */
+.sc-subtitle {
+  grid-area: subtitle;
+}
 .sc--portrait {
-  grid-template-rows: auto auto minmax(min-content, 1fr) auto;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
   grid-template-areas:
     'title title title'
+    'subtitle subtitle subtitle'
     'when when when'
     'details details qr'
-    'footer footer qr';
+    '. . qr'
+    'footer footer footer';
 }
 .sc--portrait.sc--art {
-  grid-template-rows: auto minmax(min-content, 1fr) auto auto auto;
+  grid-template-rows: auto auto minmax(min-content, 1fr) auto auto auto;
   grid-template-areas:
     'title title title'
+    'subtitle subtitle subtitle'
     'art art qr'
     'when when when'
     'details details details'
     'footer footer footer';
 }
-.sc--portrait .sc-qr {
-  align-self: safe end;
+.sc--portrait:not(.sc--art) .sc-qr {
+  align-self: safe start;
 }
 .sc--portrait.sc--art .sc-qr {
   align-self: safe center;
 }
-/* Without art, the details sit in the middle of the open space. */
-.sc--portrait:not(.sc--art) .sc-details {
-  justify-content: safe center;
-}
-

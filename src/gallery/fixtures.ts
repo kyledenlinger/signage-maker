@@ -82,6 +82,8 @@ export function fixtureEvent(
     background: opts.background ? fixtureBackground() : null,
     fontTitle: opts.fontTitle ?? base.fontTitle,
     fontBody: opts.fontBody ?? base.fontBody,
+    // A finished sign: the placeholder replaced, as the export tests do (it blocks export).
+    accommodations: 'Accessibility requests: zsr@example.edu',
   };
   if (name === 'short') {
     event.subtitle = '';

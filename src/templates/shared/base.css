@@ -109,10 +109,18 @@
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  column-gap: 0.6em;
+  /* About a space wide, matching the space after each leading dot. */
+  column-gap: 0.3em;
 }
-.t-highlights li:not(:last-child)::after {
-  content: ' ·';
+.t-highlights li + li::before {
+  /* Leads the next item, kept on its line: a wrap never strands a dot at a line end. */
+  content: '·\00a0';
+}
+.t-highlights--stacked {
+  flex-direction: column;
+}
+.t-highlights--stacked li + li::before {
+  content: none;
 }
 /* Highlights stand out from the other details: bold, the theme's highlight color, or both. */
 .t-highlights--bold-color,
@@ -147,12 +155,13 @@
   gap: var(--gap);
 }
 /*
- * Small print and logos share the row. Small print keeps at least 40% of it (so it doesn't wrap into
- * a tall column); the logos scale down, keeping their proportions, when they'd need more.
+ * Small print and logos share the row. Small print keeps at least 40% of it and room for about 22
+ * characters of the accommodations line (so it doesn't wrap into a tall column); the logos scale
+ * down, keeping their proportions, when they'd need more.
  */
 .t-footer--row .t-small {
   flex: 1 1 0;
-  min-width: 40%;
+  min-width: min(100%, max(40%, calc(var(--fs-body) * 11)));
 }
 .t-footer--row .t-logos {
   flex: 0 1 auto;
@@ -161,6 +170,9 @@
   font-size: var(--fs-smallPrint);
   line-height: var(--lh-body);
   color: var(--c-muted);
+}
+.t-small .t-access {
+  font-size: var(--fs-body);
 }
 .t-logos {
   display: flex;
@@ -240,4 +252,22 @@
 }
 .tpl--backdrop .t-title {
   max-width: min(var(--title-measure), 100%);
+}
+
+/* Preview only: a field still holding a "[...]" placeholder. */
+.tpl-host--preview [data-placeholder] {
+  position: relative;
+  outline: calc(var(--u) * 0.35) dashed #d92d20;
+  outline-offset: calc(var(--u) * 0.5);
+}
+.tpl-host--preview [data-placeholder]::after {
+  content: 'Preview only: placeholder';
+  position: absolute;
+  left: calc(var(--u) * -0.5);
+  bottom: calc(100% + var(--u) * 0.6);
+  padding: calc(var(--u) * 0.2) calc(var(--u) * 0.6);
+  background: #d92d20;
+  color: #fff;
+  font: 700 calc(var(--u) * 1.8) / 1.2 system-ui, sans-serif;
+  white-space: nowrap;
 }
