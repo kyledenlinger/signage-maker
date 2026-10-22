@@ -5,6 +5,11 @@ export default defineConfig({
   // Relative base so the build works on GitHub Pages or any static host.
   base: './',
   plugins: [react()],
+  // The export libraries load lazily, so the dev server would only find them mid-session and
+  // reload the page to re-bundle (which also broke tests that were mid-load). Bundle them up front.
+  optimizeDeps: {
+    include: ['html-to-image', 'jspdf', 'jszip', 'qrcode'],
+  },
   build: {
     // The export chunk (jsPDF, JSZip, html-to-image) is ~500 kB and loads after the page is idle.
     chunkSizeWarningLimit: 600,
