@@ -14,12 +14,12 @@ test('the three default previews render', async ({ page }) => {
   }
 });
 
-test('typing in the form updates all three previews', async ({ page }) => {
+test('typing in the form updates all three formats and the large preview', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('Banned Books Week');
   for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
-    const card = page.locator(`[data-format="${id}"]`);
-    await expect(card.locator('.sc-title')).toHaveText('Banned Books Week');
-    await expect(card.getByRole('img')).toHaveAttribute('aria-label', /Banned Books Week/);
+    await expect(page.locator(`[data-format="${id}"] .sc-title`)).toHaveText('Banned Books Week');
+    await page.locator(`.format-button[data-format="${id}"]`).click();
+    await expect(page.locator('.stage [role="img"]')).toHaveAttribute('aria-label', /Banned Books Week/);
   }
 });
 

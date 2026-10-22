@@ -10,3 +10,8 @@ export const statusBar = (page: Page) => page.locator('#status-bar');
 export async function fillAccommodations(page: Page) {
   await page.getByRole('textbox', { name: 'Accommodations line' }).fill('Accessibility requests: zsr@example.edu');
 }
+
+/** Shows a format in the large preview (its download buttons appear under it). */
+export async function selectFormat(page: Page, formatId: string) {
+  await page.locator(`.format-button[data-format="${formatId}"]`).click();
+}

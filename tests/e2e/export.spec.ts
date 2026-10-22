@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Download, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
-import { fillAccommodations, statusBar } from './helpers';
+import { fillAccommodations, selectFormat, statusBar } from './helpers';
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
@@ -36,8 +36,8 @@ function jpgSize(buf: Buffer) {
 }
 
 async function download(page: Page, button: string, card?: string) {
-  const scope = card ? page.locator(`[data-format="${card}"]`) : page;
-  const [file] = await Promise.all([page.waitForEvent('download'), scope.getByRole('button', { name: button }).click()]);
+  if (card) await selectFormat(page, card);
+  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: button }).click()]);
   return file;
 }
 
@@ -210,9 +210,11 @@ test('a blocker for one format disables its download and the zip until it is res
   await page.getByLabel('Template (required)').selectOption('split');
   await uploadPhoto(page, 900, 600); // under 1000 px: blocks print, fine for screens
   const letter = page.locator('[data-format="letter-poster"]');
-  await expect(letter.locator('figcaption')).toContainText('Blocked');
-  await expect(letter.getByRole('button', { name: 'Download PDF of Letter poster' })).toBeDisabled();
-  await expect(page.locator('[data-format="landscape-hd"] figcaption')).toContainText('Ready');
+  await expect(letter.locator('.format-status')).toContainText('Blocked');
+  await selectFormat(page, 'letter-poster');
+  await expect(page.getByRole('button', { name: 'Download PDF of Letter poster' })).toBeDisabled();
+  await expect(page.locator('[data-format="landscape-hd"] .format-status')).toContainText('Ready');
+  await selectFormat(page, 'landscape-hd');
   await expect(page.getByRole('button', { name: 'Download PNG of Landscape HD' })).toBeEnabled();
   await expect(statusBar(page)).toContainText('Letter poster · Photo or illustration: 900 px is too small for this size.');
   const zip = page.getByRole('button', { name: 'Download blocked' });
@@ -235,6 +237,7 @@ test('a blocker for one format disables its download and the zip until it is res
 
 test('text that does not fit disables that format', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('Pneumonoultramicroscopicsilicovolcanoconiosis');
+  await selectFormat(page, 'portrait-hd');
   await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
   await expect(statusBar(page)).toContainText("Portrait HD · Title: doesn't fit at minimum size.");
 });
@@ -243,12 +246,18 @@ test('every download is disabled while a blocker exists, and comes back when it 
   await page.getByLabel('Title (required)').fill('');
   await expect(statusBar(page)).toContainText('Title is required.');
   await expect(page.getByRole('button', { name: 'Download blocked' })).toBeDisabled();
-  for (const button of await page.locator('.card-actions button').all()) await expect(button).toBeDisabled();
+  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+    await selectFormat(page, id);
+    for (const button of await page.locator('.selected-actions button').all()) await expect(button).toBeDisabled();
+  }
 
   await page.getByLabel('Title (required)').fill('Halloween Game Night');
   await expect(statusBar(page)).toContainText('Ready to export');
   await expect(page.getByRole('button', { name: 'Download all (.zip)' })).toBeEnabled();
-  for (const button of await page.locator('.card-actions button').all()) await expect(button).toBeEnabled();
+  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
+    await selectFormat(page, id);
+    for (const button of await page.locator('.selected-actions button').all()) await expect(button).toBeEnabled();
+  }
 });
 
 // The spec's target is a typical laptop; shared CI runners are slower, so CI gets more room.

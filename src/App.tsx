@@ -6,7 +6,7 @@ import { ProjectBar } from './components/ProjectBar';
 import { fieldId } from './components/fields';
 import { useExporter } from './components/useExporter';
 import { EventForm } from './components/EventForm';
-import { PreviewGrid } from './components/PreviewGrid';
+import { PreviewCard } from './components/PreviewCard';
 import { ProblemsContext } from './components/problemsContext';
 import { getProblems } from './lib/problems';
 import type { FitReport } from './templates/TemplateRenderer';
@@ -121,59 +121,66 @@ export function App() {
   return (
     <FormProvider {...methods}>
       <ProblemsContext.Provider value={problems}>
-      <a className="skip-link" href="#preview-heading">
-        Skip to design and preview
-      </a>
-      <header className="app-header">
-        <h1>Signage Builder</h1>
-        <p>Fill in the event once; every format updates together.</p>
-        <ProjectBar
-          autosaveOk={autosaveOk}
-          status={projectStatus}
-          onNew={startNew}
-          onDuplicate={duplicate}
-          onSave={saveProject}
-          onOpen={(file) => void openProject(file)}
-        />
-      </header>
-      <main className="app-main">
-        <form
-          className="panel form-panel"
-          noValidate
-          onSubmit={(e) => e.preventDefault()}
-          aria-labelledby="form-heading"
-        >
-          <h2 id="form-heading" className="visually-hidden">
-            Event details
-          </h2>
-          <EventForm />
-        </form>
-        <section className="panel preview-panel" aria-labelledby="preview-heading">
-          <h2 id="preview-heading" tabIndex={-1}>
-            Design and preview
-          </h2>
-          <ExportBar
-            state={exporter.state}
-            screenType={screenType}
-            onScreenTypeChange={setScreenType}
-            onExportAll={exportAll}
-            problems={problems}
-            formatCount={preview.formatIds.length}
+        <a className="skip-link" href="#preview">
+          Skip to design and preview
+        </a>
+        <header className="app-header">
+          <div className="brand">
+            <span className="brand-mark" aria-hidden="true">
+              WF
+            </span>
+            <div>
+              <h1>Signage Builder</h1>
+              <p className="tagline">Fill in the event once; every format updates together.</p>
+            </div>
+          </div>
+          <ProjectBar
+            autosaveOk={autosaveOk}
+            status={projectStatus}
+            onNew={startNew}
+            onDuplicate={duplicate}
+            onSave={saveProject}
+            onOpen={(file) => void openProject(file)}
           />
-          <DesignPanel />
-          <h3 className="preview-title">Preview</h3>
-          <PreviewGrid
-            event={preview}
-            onFit={onFit}
-            problems={problems}
-            exporting={exporter.state.running}
-            onDownload={exportOne}
-          />
-        </section>
-      </main>
-      <div className="visually-hidden" aria-live="polite" role="status">
-        {announcement}
-      </div>
+        </header>
+        <main className="app-main">
+          <div className="workspace">
+            <div className="workspace-top">
+              <ExportBar
+                state={exporter.state}
+                screenType={screenType}
+                onScreenTypeChange={setScreenType}
+                onExportAll={exportAll}
+                problems={problems}
+                formatCount={preview.formatIds.length}
+              />
+              <PreviewCard
+                event={preview}
+                onFit={onFit}
+                problems={problems}
+                exporting={exporter.state.running}
+                onDownload={exportOne}
+              />
+            </div>
+            <div className="workspace-look">
+              <DesignPanel />
+            </div>
+          </div>
+          <form
+            className="panel form-panel"
+            noValidate
+            onSubmit={(e) => e.preventDefault()}
+            aria-labelledby="form-heading"
+          >
+            <h2 id="form-heading" className="visually-hidden">
+              Event details
+            </h2>
+            <EventForm />
+          </form>
+        </main>
+        <div className="visually-hidden" aria-live="polite" role="status">
+          {announcement}
+        </div>
       </ProblemsContext.Provider>
     </FormProvider>
   );

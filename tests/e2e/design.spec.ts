@@ -252,7 +252,7 @@ test('ZSR Library logo: Semiformal horizontal by default, colorway matched to th
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);
 });
 
-test('design options sit in one panel directly above the previews; it can collapse', async ({ page }) => {
+test('design options sit in one panel below the preview; it can collapse', async ({ page }) => {
   const design = page.locator('details.design');
   for (const label of ['Template (required)', 'Theme (required)', 'Title font', 'Date style', 'Weekday', 'Highlights style', 'Logo version', 'Co-sponsor logos']) {
     await expect(design.getByLabel(label)).toBeVisible();
@@ -261,13 +261,15 @@ test('design options sit in one panel directly above the previews; it can collap
   // None of them are left in the event form.
   await expect(page.locator('form.form-panel select, form.form-panel input[type="file"][multiple]')).toHaveCount(0);
 
-  // The previews follow the panel directly.
-  const designBottom = await design.evaluate((el) => el.getBoundingClientRect().bottom);
-  const gridTop = await page.locator('.preview-grid').evaluate((el) => el.getBoundingClientRect().top);
-  expect(gridTop - designBottom).toBeLessThan(80);
+  // The panel follows the preview.
+  const previewBottom = await page.locator('#preview').evaluate((el) => el.getBoundingClientRect().bottom);
+  const designTop = await design.evaluate((el) => el.getBoundingClientRect().top);
+  expect(designTop).toBeGreaterThanOrEqual(previewBottom);
 
   await design.locator('> summary').click();
   await expect(design.getByLabel('Template (required)')).toBeHidden();
+  // The toggle event that saves the state fires just after the click.
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('signage.designOpen'))).toBe('false');
   await page.reload();
   await expect(page.locator('details.design')).not.toHaveAttribute('open', '');
   expect((await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze()).violations).toEqual([]);

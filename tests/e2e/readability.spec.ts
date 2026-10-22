@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { fillAccommodations, statusBar } from './helpers';
+import { fillAccommodations, selectFormat, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -62,7 +62,8 @@ test('text that cannot fit is flagged per format with a fix, never broken mid-wo
   // Every fit problem points at the title, the field that is actually too wide.
   const fitItems = panel(page).locator('li', { hasText: "doesn't fit" });
   for (const item of await fitItems.all()) await expect(item).toContainText('· Title:');
-  await expect(page.locator('[data-fits="false"] figcaption').first()).toContainText('Blocked');
+  await expect(page.locator('[data-fits="false"] .format-status').first()).toContainText('Blocked');
+  await selectFormat(page, 'portrait-hd');
   await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
   // Still one line: the word is never split.
   const lines = await page

@@ -1,0 +1,32 @@
+/*
+ * App interface font: Public Sans, self-hosted (SIL Open Font License, public/fonts/OFL-public-sans.txt)
+ * so the app makes no font requests to other sites. 400 and 700 are shared with the sign fonts.
+ */
+@font-face {
+  font-family: 'Public Sans UI';
+  src: url('/fonts/public-sans-latin-400-normal.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Public Sans UI';
+  src: url('/fonts/public-sans-latin-500-normal.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Public Sans UI';
+  src: url('/fonts/public-sans-latin-600-normal.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Public Sans UI';
+  src: url('/fonts/public-sans-latin-700-normal.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
