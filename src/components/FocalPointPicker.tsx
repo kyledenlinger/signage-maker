@@ -1,3 +1,4 @@
+import type { PointerEvent } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { EventData, ImageAsset } from '../schema/event';
 import { fieldId } from './fields';
@@ -10,7 +11,7 @@ interface Props {
 }
 
 /**
- * Click the thumbnail to set the point to keep in view when the image is cropped. The two sliders
+ * Click or drag on the thumbnail to set the point to keep in view when the image is cropped. The two sliders
  * do the same from the keyboard (arrow keys move the point).
  */
 export function FocalPointPicker({ image, name, what }: Props) {
@@ -18,21 +19,30 @@ export function FocalPointPicker({ image, name, what }: Props) {
   const focus = useWatch({ control, name });
   const id = fieldId(name);
   const set = (next: { x: number; y: number }) => setValue(name, { x: clamp(next.x), y: clamp(next.y) }, { shouldDirty: true });
+  const setFromPointer = (e: PointerEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    set({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+  };
 
   return (
     <fieldset className="field fieldset focal" id={id} tabIndex={-1}>
       <legend>{what[0].toUpperCase() + what.slice(1)} focal point</legend>
       <p className="hint" id={`${id}-hint`}>
-        Click the part of the {what} that must stay visible, or use the sliders. Each format crops around this point.
+        Click or drag to the part of the {what} that must stay visible, or use the sliders. Each format crops around this point.
       </p>
       <div
         className="focal-thumb"
-        onClick={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          set({ x: (e.clientX - rect.left) / rect.width, y: (e.clientY - rect.top) / rect.height });
+        onPointerDown={(e) => {
+          if (e.button !== 0) return;
+          e.preventDefault();
+          e.currentTarget.setPointerCapture(e.pointerId);
+          setFromPointer(e);
+        }}
+        onPointerMove={(e) => {
+          if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromPointer(e);
         }}
       >
-        <img src={image.dataUrl} alt="" />
+        <img src={image.dataUrl} alt="" draggable={false} />
         <span className="focal-marker" style={{ left: `${focus.x * 100}%`, top: `${focus.y * 100}%` }} aria-hidden="true" />
       </div>
       <div className="focal-sliders">

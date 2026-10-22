@@ -20,7 +20,7 @@ export function Split({ event, theme, format }: TemplateProps) {
         <WhenWhere content={c} className="sp-when" />
         <Details content={c} className="sp-details" />
         <QrTile content={c} theme={theme} format={format} qrU={L.qrU} className="sp-qr" />
-        <Footer content={c} theme={theme} format={format} row={o === 'square'} className="sp-footer" />
+        <Footer content={c} theme={theme} format={format} className="sp-footer" />
       </div>
     </div>
   );

@@ -22,7 +22,7 @@
     'title title'
     'when when'
     'details qr'
-    'footer footer';
+    'footer qr';
   gap: var(--gap);
   padding: var(--safe-y) var(--safe-x);
 }
@@ -44,8 +44,11 @@
 }
 .sp-qr {
   grid-area: qr;
+  justify-self: end;
   align-self: safe end;
 }
+/* Logo bottom-left and QR in the bottom-right corner, their bottoms level. */
 .sp-footer {
   grid-area: footer;
+  align-self: safe end;
 }

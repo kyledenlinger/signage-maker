@@ -181,8 +181,12 @@ test('custom sizes: validated, previewed, exported at exact size, remembered, re
   await fillAccommodations(page);
   const card = page.locator('[data-format="custom-lobby-screen"]');
   await expect(card).toHaveAttribute('data-fits', 'true');
-  await card.click();
-  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Download PNG of Lobby screen' }).click()]);
+  await page.getByRole('button', { name: 'Download', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Download' });
+  for (const box of await dialog.locator('.download-formats input').all())
+    await box.setChecked((await box.getAttribute('id')) === 'download-custom-lobby-screen');
+  await dialog.getByLabel(/One \.zip/).uncheck();
+  const [file] = await Promise.all([page.waitForEvent('download'), dialog.getByRole('button', { name: 'Download 1 file' }).click()]);
   expect(file.suggestedFilename()).toBe('halloween-game-night_lobby-screen_1366x768.png');
   const png = await readFile((await file.path())!);
   expect([png.readUInt32BE(16), png.readUInt32BE(20)]).toEqual([1366, 768]);

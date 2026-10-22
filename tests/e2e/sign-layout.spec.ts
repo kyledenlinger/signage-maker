@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 const stage = (page: Page) => page.locator('.stage .tpl');
 
 test('highlight separators lead the next item, so no line ends in a dot', async ({ page }) => {
-  await selectFormat(page, 'letter-poster');
+  await selectFormat(page, 'portrait-hd');
   const list = stage(page).locator('.t-highlights');
   await expect(list).not.toHaveClass(/t-highlights--stacked/);
   const lines = await list.evaluate((ul) =>
@@ -30,7 +30,7 @@ test('highlight separators lead the next item, so no line ends in a dot', async 
 });
 
 test('highlights that run to three or more lines stack as a list', async ({ page }) => {
-  await selectFormat(page, 'portrait-hd');
+  // Landscape HD's details column is narrow: the sample's five highlights stack.
   const list = stage(page).locator('.t-highlights');
   await expect(list).toHaveClass(/t-highlights--stacked/);
   const before = await list.locator('li').nth(1).evaluate((li) => getComputedStyle(li, '::before').content);
@@ -81,4 +81,33 @@ test('in the preview, a field still holding [...] is outlined and tagged until i
   await fillAccommodations(page);
   await expect(access).not.toHaveAttribute('data-placeholder');
   expect(await access.evaluate((el) => getComputedStyle(el).outlineStyle)).toBe('none');
+});
+
+test('the QR code is always in a corner; at the bottom, it is level with the logos', async ({ page }) => {
+  for (const template of ['showcase', 'split', 'band', 'type-only', 'frame']) {
+    for (const format of ['landscape-hd', 'portrait-hd', 'square', 'letter-poster']) {
+      await page.goto(`/gallery.html?template=${template}&format=${format}&image=1&qr=1&fixture=sample&scale=auto`);
+      await page.evaluate(() => document.fonts.ready);
+      await expect(page.locator('[data-cell]')).toHaveAttribute('data-fits', 'true');
+      const r = await page.locator('[data-cell] .tpl').evaluate((root) => {
+        const rect = (el: Element) => el.getBoundingClientRect();
+        const scale = rect(root).width / (root as HTMLElement).offsetWidth;
+        const qr = rect(root.querySelector('.t-qr-tile')!);
+        const logos = rect(root.querySelector('.t-logos')!);
+        const others = Array.from(root.querySelectorAll('[data-slot], .t-logos')).map(rect);
+        const px = (v: number) => v / scale;
+        return {
+          rightmost: px(Math.max(...others.map((o) => o.right)) - qr.right),
+          topmost: px(qr.top - Math.min(...others.map((o) => o.top))),
+          bottommost: px(Math.max(...others.map((o) => o.bottom)) - qr.bottom),
+          logoBottom: px(Math.abs(logos.bottom - qr.bottom)),
+        };
+      });
+      const where = `${template} · ${format}`;
+      expect(r.rightmost, where).toBeLessThanOrEqual(2);
+      if (r.topmost <= 2) continue; // top-right corner
+      expect(r.bottommost, where).toBeLessThanOrEqual(2);
+      expect(r.logoBottom, where).toBeLessThanOrEqual(2);
+    }
+  }
 });

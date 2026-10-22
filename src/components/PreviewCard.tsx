@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { FileType, FormatPreset } from '../config/formats';
+import type { FormatPreset } from '../config/formats';
 import { resolveTheme } from '../config/themes';
 import { previewAltText } from '../lib/altText';
 import { useFormats } from '../lib/formatStore';
@@ -7,14 +7,11 @@ import { blockersFor, type Problem } from '../lib/problems';
 import type { EventData } from '../schema/event';
 import { TemplateRenderer, type FitReport } from '../templates/TemplateRenderer';
 import { FormatPicker } from './FormatPicker';
-import { STATUS_BAR_ID } from './StatusBar';
 
 interface Props {
   event: EventData;
   problems: Problem[];
   onFit: (report: FitReport) => void;
-  exporting: boolean;
-  onDownload: (format: FormatPreset, type: FileType) => void;
 }
 
 /** Largest landscape preview, and the share of the fit size the "across the room" view uses. */
@@ -80,7 +77,7 @@ function StatusTag({ blocked, id }: { blocked: boolean; id?: string }) {
  * One large preview of the selected format, a strip to switch formats, an "across the room" view
  * and full screen. Every sign renders through the same TemplateRenderer the export uses.
  */
-export function PreviewCard({ event, problems, onFit, exporting, onDownload }: Props) {
+export function PreviewCard({ event, problems, onFit }: Props) {
   const formats = useFormats().filter((f) => event.formatIds.includes(f.id));
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mode, setMode] = useState<'fit' | 'room'>('fit');
@@ -91,7 +88,6 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload }: P
   const [stageRef, stage] = useSize<HTMLDivElement>();
 
   const selected = formats.find((f) => f.id === selectedId) ?? formats[0];
-  const blockers = selected ? blockersFor(problems, selected.id) : [];
 
   const pad = 24;
   const fit = selected
@@ -114,23 +110,6 @@ export function PreviewCard({ event, problems, onFit, exporting, onDownload }: P
             </span>
           )}
         </h2>
-        {selected && (
-          <div className="selected-actions">
-            {selected.fileTypes.map((type) => (
-              <button
-                key={type}
-                type="button"
-                className="button-secondary button-small"
-                aria-label={`Download ${type.toUpperCase()} of ${selected.name}`}
-                disabled={blockers.length > 0 || exporting}
-                aria-describedby={blockers.length > 0 ? STATUS_BAR_ID : undefined}
-                onClick={() => onDownload(selected, type)}
-              >
-                {type.toUpperCase()}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="preview-tools">
           <div className="segmented" role="group" aria-label="Preview size">
             <button type="button" aria-pressed={mode === 'fit'} onClick={() => setMode('fit')}>

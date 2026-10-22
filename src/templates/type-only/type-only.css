@@ -16,6 +16,7 @@
 }
 .to-qr {
   grid-area: qr;
+  justify-self: end;
   align-self: safe end;
 }
 .to-footer {
@@ -32,23 +33,16 @@
     'when details'
     'footer qr';
 }
-.to--landscape .to-qr {
-  justify-self: end;
-}
 
-/* Portrait: stacked, QR bottom-center. */
+/* Portrait: stacked; logo bottom-left and QR bottom-right, their bottoms level. */
 .to--portrait {
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   grid-template-areas:
-    'title'
-    'when'
-    'details'
-    'qr'
-    'footer';
-}
-.to--portrait .to-qr {
-  justify-self: center;
+    'title title'
+    'when when'
+    'details details'
+    'footer qr';
 }
 
 /* Square: stacked, QR bottom-right. */

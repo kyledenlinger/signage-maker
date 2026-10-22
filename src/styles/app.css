@@ -197,29 +197,51 @@ a {
   order: 3;
 }
 
+/*
+ * Wide screens: the page fills the window exactly. Under the header, the form and the design side
+ * (status, preview, formats, Look) are two columns that each scroll on their own; the page itself
+ * never scrolls.
+ */
 @media (min-width: 1024px) {
+  #root {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+  }
+  .app-header {
+    flex: none;
+  }
   .app-main {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    box-sizing: border-box;
     display: grid;
     grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
-    align-items: start;
+    grid-template-rows: minmax(0, 1fr);
     gap: 1.25rem;
+    padding-bottom: 0;
+  }
+  .workspace,
+  .form-panel {
+    grid-row: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Holds absolutely positioned content (visually hidden inputs) inside the scroll area. */
+    position: relative;
+    /* Room for focus rings at the edges, and a margin under the last card. */
+    padding: 3px 3px 1rem;
   }
   .workspace {
     display: flex;
     flex-direction: column;
     gap: 1rem;
     grid-column: 2;
-    grid-row: 1;
-    /* Status and preview stay in view while the form scrolls. */
-    position: sticky;
-    top: 1rem;
-    max-height: calc(100vh - 2rem);
-    overflow: auto;
-    padding: 2px;
   }
   .form-panel {
     grid-column: 1;
-    grid-row: 1;
   }
 }
 
@@ -496,6 +518,8 @@ button:disabled {
 /* ---------- Status and export ---------- */
 
 .export-bar {
+  display: grid;
+  gap: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-panel);
@@ -552,35 +576,6 @@ button:disabled {
 .status-warnings-title {
   margin: 0;
   font-weight: 600;
-}
-.export-controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem 1.25rem;
-  align-items: center;
-  margin-top: 0.75rem;
-}
-.export-type {
-  border: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-.export-type legend {
-  float: left;
-  margin-right: 0.75rem;
-  font-weight: 600;
-}
-.export-type label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  min-height: 40px;
-}
-.export-bar .hint {
-  margin-top: 0.5rem;
 }
 .export-rows {
   list-style: none;
@@ -855,6 +850,9 @@ button:disabled {
   margin-top: 0.5rem;
   cursor: crosshair;
   line-height: 0;
+  /* Dragging moves the point; it never scrolls the page or selects the image. */
+  touch-action: none;
+  user-select: none;
 }
 .focal-thumb img {
   width: 100%;
@@ -894,23 +892,9 @@ button:disabled {
 }
 
 @media (min-width: 1024px) {
-  /* Leaves room under the pinned preview for the template cards at 1440 × 900. */
+  /* The sign and the format strip fit on screen; the Look card follows as the column scrolls. */
   .stage {
-    height: clamp(300px, calc(100vh - 560px), 560px);
-  }
-}
-/* On tall-enough screens the status and preview stay pinned while the Look card scrolls under them. */
-@media (min-width: 1024px) {
-  .workspace.is-pinned .workspace-top {
-    position: sticky;
-    top: 0;
-    z-index: 2;
-    background: var(--bg);
-    padding-bottom: 0.5rem;
-  }
-  /* Anything scrolled into view or focused stops below the pinned part, never under it. */
-  .workspace.is-pinned {
-    scroll-padding-top: calc(var(--pinned-h, 0px) + 0.5rem);
+    height: clamp(320px, calc(100vh - 420px), 680px);
   }
 }
 
@@ -1328,7 +1312,7 @@ button:disabled {
   gap: 0 0.75rem;
 }
 
-/* Wide screens: the status sits beside the format toggle and download button. */
+/* Wide screens: the Download button sits beside the status. */
 @media (min-width: 1024px) {
   .export-bar {
     display: grid;
@@ -1336,22 +1320,140 @@ button:disabled {
     gap: 0 1rem;
     align-items: start;
   }
-  .export-bar .status-bar {
-    grid-row: 1 / span 3;
-  }
-  .export-bar .export-controls {
-    margin-top: 0;
-    flex-wrap: nowrap;
-    gap: 0.75rem;
-  }
-  .export-bar .hint {
-    grid-column: 2;
-    margin-top: 0.4rem;
-    max-width: 22rem;
-    font-size: 0.85rem;
-  }
-  .export-bar .export-rows,
-  .export-bar .export-message {
-    grid-column: 1 / -1;
-  }
+}
+
+/* ---------- Download dialog ---------- */
+
+.download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-width: 10rem;
+}
+.download-dialog {
+  width: min(34rem, calc(100vw - 2rem));
+  max-height: calc(100vh - 2rem);
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 64px rgb(0 0 0 / 0.3);
+}
+.download-dialog::backdrop {
+  background: rgb(17 19 24 / 0.55);
+}
+.download-panel {
+  display: grid;
+  gap: 1rem;
+  padding: 1.25rem;
+}
+.download-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.download-header h2 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+.download-dialog fieldset {
+  border: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.download-dialog legend {
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  padding: 0;
+}
+.download-formats ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.4rem;
+}
+.download-formats li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  column-gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface-muted);
+}
+.download-formats li:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.download-formats li.is-blocked {
+  border-color: var(--danger-border);
+  background: var(--danger-tint);
+}
+.download-formats input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--accent);
+}
+.download-formats label {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6rem;
+  align-items: baseline;
+  min-height: 2rem;
+  align-content: center;
+}
+.download-name {
+  font-weight: 600;
+}
+.download-formats .format-status {
+  grid-column: 2;
+  font-size: 0.9rem;
+}
+.segmented-radio {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.segmented-radio label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: var(--target);
+  padding: 0.4rem 0.75rem;
+  border: 1.5px solid var(--border-input);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+.segmented-radio label:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+.segmented-radio input {
+  accent-color: var(--accent);
+}
+.download-type .hint {
+  margin: 0.4rem 0 0;
+}
+.download-zip {
+  margin: 0;
+}
+.download-zip .hint {
+  grid-column: 2;
+  margin: 0.2rem 0 0;
+}
+.download-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--divider);
+}
+.download-dialog .export-rows,
+.download-dialog .export-message {
+  margin: 0;
 }

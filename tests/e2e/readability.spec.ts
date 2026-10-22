@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { chooseTemplate, chooseTheme, fillAccommodations, selectFormat, statusBar } from './helpers';
+import { chooseTemplate, chooseTheme, fillAccommodations, statusBar } from './helpers';
 import { expect, test, type Page } from '@playwright/test';
 
 const AXE_TAGS = ['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'];
@@ -63,8 +63,10 @@ test('text that cannot fit is flagged per format with a fix, never broken mid-wo
   const fitItems = panel(page).locator('li', { hasText: "doesn't fit" });
   for (const item of await fitItems.all()) await expect(item).toContainText('· Title:');
   await expect(page.locator('[data-fits="false"] .format-status').first()).toContainText('Blocked');
-  await selectFormat(page, 'portrait-hd');
-  await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
+  await fillAccommodations(page);
+  await page.getByRole('button', { name: 'Download', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Download' }).getByRole('checkbox', { name: /Portrait HD/ })).toBeDisabled();
+  await page.keyboard.press('Escape');
   // Still one line: the word is never split.
   const lines = await page
     .locator('[data-format="portrait-hd"] [data-slot="title"]')
@@ -125,4 +127,25 @@ test('focal point moves with the keyboard and crops the photo', async ({ page })
 
   const results = await new AxeBuilder({ page }).withTags(AXE_TAGS).analyze();
   expect(results.violations).toEqual([]);
+});
+
+test('dragging the focal point marker moves it', async ({ page }) => {
+  const png = await page.evaluate(() => {
+    const c = document.createElement('canvas');
+    c.width = 2400;
+    c.height = 1600;
+    c.getContext('2d')!.fillRect(0, 0, 2400, 1600);
+    return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#field-image').setInputFiles({ name: 'photo.png', mimeType: 'image/png', buffer: Buffer.from(png, 'base64') });
+  const thumb = page.locator('.focal-thumb').first();
+  await thumb.scrollIntoViewIfNeeded();
+  const box = (await thumb.boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(box.x + box.width * 0.6, box.y + box.height * 0.4, { steps: 4 });
+  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.25, { steps: 4 });
+  await page.mouse.up();
+  await expect(page.getByLabel(/Left to right/)).toHaveValue('80');
+  await expect(page.getByLabel(/Top to bottom/)).toHaveValue('25');
 });

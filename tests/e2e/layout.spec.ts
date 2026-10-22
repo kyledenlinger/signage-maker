@@ -15,11 +15,12 @@ test.beforeEach(async ({ page }) => {
 const stageSign = (page: import('@playwright/test').Page) => page.locator('.stage .scaled-sign');
 
 test('one large preview of the selected format, switched from the format strip', async ({ page }) => {
-  // Landscape HD, as large as the stage allows: it fills the stage's height (less its padding).
+  // Landscape HD, one large preview.
   const box = await stageSign(page).boundingBox();
   const stage = await page.locator('.stage').boundingBox();
   expect(box!.width).toBeGreaterThan(500);
-  expect(box!.height).toBeGreaterThan(stage!.height - 60);
+  // As large as the stage allows: it fills the stage's width or its height (less padding).
+  expect(Math.max(box!.width - (stage!.width - 60), box!.height - (stage!.height - 60))).toBeGreaterThan(0);
   await expect(stageSign(page)).toHaveAttribute('aria-label', /Signage preview, Landscape HD: Halloween Game Night/);
   await expect(page.locator('.format-button[data-format="landscape-hd"]')).toHaveAttribute('aria-pressed', 'true');
 
@@ -77,21 +78,21 @@ test('the skip link jumps to the preview', async ({ page }) => {
   await expect(page.locator('#preview')).toHaveCount(1);
 });
 
-test('at 1440 × 900, choosing a template or colors updates the preview while it stays in view', async ({ page }) => {
-  const inView = () =>
-    stageSign(page).evaluate((el) => {
-      const r = el.getBoundingClientRect();
-      return r.top >= 0 && r.bottom <= window.innerHeight;
-    });
-  await expect(page.locator('.workspace')).toHaveClass(/is-pinned/);
+test('at 1440 × 900, the design column scrolls as one: preview, formats and the whole Look card', async ({ page }) => {
+  const column = page.locator('.workspace');
+  // The page itself doesn't scroll: the form and the design side scroll on their own.
+  expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeLessThanOrEqual(900);
+  // Nothing in it is pinned: the preview scrolls away with the rest.
+  expect(await page.locator('.workspace-top').evaluate((el) => getComputedStyle(el).position)).toBe('static');
+  // The sign and the format strip fit on screen at first.
+  const strip = (await page.locator('.format-strip').boundingBox())!;
+  expect(strip.y + strip.height).toBeLessThanOrEqual(900);
+  // Scrolled to the end, the Look card shows whole.
+  await column.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+  const look = (await page.locator('.look').boundingBox())!;
+  expect(look.height).toBeLessThan(900);
+  expect(look.y).toBeGreaterThanOrEqual(0);
+  expect(look.y + look.height).toBeLessThanOrEqual(900);
   await page.locator('.option-card[data-template="type-only"]').click();
-  await expect(page.locator('.stage .tpl.to')).toBeVisible();
-  expect(await inView()).toBe(true);
-  await page.locator('.pill[data-theme="light"]').click();
-  await expect(page.locator('.stage .tpl')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
-  expect(await inView()).toBe(true);
-  // The control that was used is not hidden under the pinned preview.
-  const pill = await page.locator('.pill[data-theme="light"]').boundingBox();
-  const pinnedBottom = await page.locator('.workspace-top').evaluate((el) => el.getBoundingClientRect().bottom);
-  expect(pill!.y).toBeGreaterThanOrEqual(pinnedBottom - 1);
+  await expect(page.locator('.stage .tpl.to')).toHaveCount(1);
 });

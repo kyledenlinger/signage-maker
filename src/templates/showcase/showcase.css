@@ -19,6 +19,7 @@
 .sc-qr {
   grid-area: qr;
   justify-self: end;
+  align-self: safe end;
 }
 .sc-details {
   grid-area: details;
@@ -28,8 +29,8 @@
 }
 
 /*
- * Landscape: title top-left; date, time and location together left of center; QR top-right;
- * details column right; logo bottom-left.
+ * Landscape: title top-left with the QR in the top-right corner; date, time and location together
+ * left of center; details column right; logo bottom-left.
  */
 .sc--landscape {
   grid-template-rows: auto 1fr auto;
@@ -44,6 +45,9 @@
     'when art details'
     'footer footer details';
 }
+.sc--landscape .sc-qr {
+  align-self: start;
+}
 .sc--landscape .sc-when {
   justify-content: safe center;
 }
@@ -52,9 +56,9 @@
 }
 
 /*
- * Portrait and square: title with the subtitle right under it; image band with the QR beside it;
- * then the date badge with time and location; then the details. Without an image, leftover space
- * collects above the footer rather than mid-sign.
+ * Portrait and square: title with the subtitle right under it; the image band; then the date badge
+ * with time and location; then the details. Logo bottom-left and QR bottom-right, their bottoms
+ * level. Without an image, leftover space collects above the footer rather than mid-sign.
  */
 .sc-subtitle {
   grid-area: subtitle;
@@ -65,23 +69,20 @@
     'title title title'
     'subtitle subtitle subtitle'
     'when when when'
-    'details details qr'
-    '. . qr'
-    'footer footer footer';
+    'details details details'
+    '. . .'
+    'footer footer qr';
 }
 .sc--portrait.sc--art {
   grid-template-rows: auto auto minmax(min-content, 1fr) auto auto auto;
   grid-template-areas:
     'title title title'
     'subtitle subtitle subtitle'
-    'art art qr'
+    'art art art'
     'when when when'
     'details details details'
-    'footer footer footer';
+    'footer footer qr';
 }
-.sc--portrait:not(.sc--art) .sc-qr {
-  align-self: safe start;
-}
-.sc--portrait.sc--art .sc-qr {
-  align-self: safe center;
+.sc-footer {
+  align-self: safe end;
 }

@@ -42,6 +42,7 @@
 }
 .fr-qr {
   grid-area: qr;
+  justify-self: end;
   align-self: safe end;
 }
 .fr-footer {

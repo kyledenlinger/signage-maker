@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Download, type Page } from '@playwright/test';
 import JSZip from 'jszip';
 import { readFile } from 'node:fs/promises';
-import { fillAccommodations, selectFormat, statusBar } from './helpers';
+import { fillAccommodations, statusBar } from './helpers';
 import { chooseTemplate, openFormats, openMoreOptions } from './helpers';
 
 test.beforeEach(async ({ page }) => {
@@ -38,11 +38,38 @@ function jpgSize(buf: Buffer) {
   throw new Error('No JPEG frame header');
 }
 
-async function download(page: Page, button: string, card?: string) {
-  if (card) await selectFormat(page, card);
-  const [file] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: button }).click()]);
+/** Opens the download dialog. */
+async function openDownload(page: Page) {
+  await page.getByRole('button', { name: 'Download', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Download' });
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
+
+/**
+ * Downloads through the dialog: by default every ready format in one zip. `formats` picks only
+ * those; `zip: false` downloads loose files.
+ */
+async function download(page: Page, opts: { formats?: string[]; type?: 'png' | 'jpg'; zip?: boolean } = {}) {
+  const dialog = await openDownload(page);
+  if (opts.formats) {
+    for (const box of await dialog.locator('.download-formats input:not([disabled])').all()) {
+      const id = (await box.getAttribute('id'))!.replace(/^download-/, '');
+      await box.setChecked(opts.formats.includes(id));
+    }
+  }
+  if (opts.type) await dialog.getByRole('radio', { name: new RegExp(opts.type, 'i') }).check();
+  if (opts.zip === false) await dialog.getByLabel(/One \.zip/).uncheck();
+  const [file] = await Promise.all([
+    page.waitForEvent('download'),
+    dialog.locator('.download-footer .button-primary').click(),
+  ]);
   return file;
 }
+
+/** One format as a single file. */
+const single = (page: Page, formatId: string, type?: 'png' | 'jpg') =>
+  download(page, { formats: [formatId], type, zip: false });
 
 async function uploadPhoto(page: Page, width: number, height: number) {
   const b64 = await page.evaluate(
@@ -66,13 +93,13 @@ async function uploadPhoto(page: Page, width: number, height: number) {
 }
 
 test('Landscape HD PNG is exactly 1920 × 1080 with the spec file name', async ({ page }) => {
-  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const file = await single(page, 'landscape-hd');
   expect(file.suggestedFilename()).toBe('halloween-game-night_landscape-hd_1920x1080.png');
   expect(pngSize(await bytes(file))).toEqual({ width: 1920, height: 1080 });
 });
 
 test('the exported PNG includes the logo', async ({ page }) => {
-  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const file = await single(page, 'landscape-hd');
   const b64 = (await bytes(file)).toString('base64');
   // The Reverse logo's gold WF mark sits bottom-left: look for Old Gold pixels there.
   const goldPixels = await page.evaluate(async (data) => {
@@ -95,13 +122,13 @@ test('the exported PNG includes the logo', async ({ page }) => {
 });
 
 test('Portrait HD JPG is exactly 1080 × 1920', async ({ page }) => {
-  const file = await download(page, 'Download JPG of Portrait HD', 'portrait-hd');
+  const file = await single(page, 'portrait-hd', 'jpg');
   expect(file.suggestedFilename()).toBe('halloween-game-night_portrait-hd_1080x1920.jpg');
   expect(jpgSize(await bytes(file))).toEqual({ width: 1080, height: 1920 });
 });
 
 test('Letter poster PDF is one 8.5 × 11 in page', async ({ page }) => {
-  const file = await download(page, 'Download PDF of Letter poster', 'letter-poster');
+  const file = await single(page, 'letter-poster');
   expect(file.suggestedFilename()).toBe('halloween-game-night_letter-poster_2550x3300.pdf');
   const pdf = (await bytes(file)).toString('latin1');
   expect(pdf.startsWith('%PDF-')).toBe(true);
@@ -152,7 +179,7 @@ async function previewShot(page: Page, override = '', fonts = '') {
 }
 
 test('the export uses the same fonts and layout as the preview', async ({ page }) => {
-  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const file = await single(page, 'landscape-hd');
   const exported = (await bytes(file)).toString('base64');
 
   expect(await rowProfileDiff(page, exported, await previewShot(page))).toBeLessThan(0.04);
@@ -167,7 +194,7 @@ test('chosen title and body fonts are embedded in the export', async ({ page }) 
   await page.getByLabel('Title font').selectOption('source-serif');
   await page.getByLabel('Body font').selectOption('lexend');
   await expect(page.locator('[data-format="landscape-hd"] [data-slot="title"]')).toHaveCSS('font-family', /Source Serif 4/);
-  const file = await download(page, 'Download PNG of Landscape HD', 'landscape-hd');
+  const file = await single(page, 'landscape-hd');
   const exported = (await bytes(file)).toString('base64');
 
   const fonts = '&fontTitle=source-serif&fontBody=lexend';
@@ -179,7 +206,7 @@ test('chosen title and body fonts are embedded in the export', async ({ page }) 
 });
 
 test('download all: zip holds each format, event.json and alt-text.txt', async ({ page }) => {
-  const file = await download(page, 'Download all (.zip)');
+  const file = await download(page);
   expect(file.suggestedFilename()).toBe('halloween-game-night_signage.zip');
   const zip = await JSZip.loadAsync(await bytes(file));
   const names = Object.keys(zip.files).sort();
@@ -202,33 +229,33 @@ test('download all: zip holds each format, event.json and alt-text.txt', async (
 });
 
 test('JPG option for screen formats', async ({ page }) => {
-  await page.getByRole('radio', { name: 'JPG' }).check();
-  const file = await download(page, 'Download all (.zip)');
+  const file = await download(page, { type: 'jpg' });
   const names = Object.keys((await JSZip.loadAsync(await bytes(file))).files);
   expect(names).toContain('halloween-game-night_landscape-hd_1920x1080.jpg');
   expect(names).toContain('halloween-game-night_letter-poster_2550x3300.pdf');
 });
 
-test('a blocker for one format disables its download and the zip until it is resolved', async ({ page }) => {
+test('a blocker for one format takes only that format out of the download', async ({ page }) => {
   await chooseTemplate(page, 'split');
   await uploadPhoto(page, 900, 600); // under 1000 px: blocks print, fine for screens
   const letter = page.locator('[data-format="letter-poster"]');
   await expect(letter.locator('.format-status')).toContainText('Blocked');
-  await selectFormat(page, 'letter-poster');
-  await expect(page.getByRole('button', { name: 'Download PDF of Letter poster' })).toBeDisabled();
   await expect(page.locator('[data-format="landscape-hd"] .format-status')).toContainText('Ready');
-  await selectFormat(page, 'landscape-hd');
-  await expect(page.getByRole('button', { name: 'Download PNG of Landscape HD' })).toBeEnabled();
   await expect(statusBar(page)).toContainText('Letter poster · Photo or illustration: 900 px is too small for this size.');
-  const zip = page.getByRole('button', { name: 'Download blocked' });
-  await expect(zip).toBeDisabled();
-  await expect(zip).toHaveAttribute('aria-describedby', 'status-bar');
+
+  const dialog = await openDownload(page);
+  const box = dialog.getByRole('checkbox', { name: /Letter poster/ });
+  await expect(box).toBeDisabled();
+  await expect(box).not.toBeChecked();
+  await expect(box).toHaveAccessibleDescription(/900 px is too small/);
+  await expect(dialog.getByRole('checkbox', { name: /Landscape HD/ })).toBeChecked();
   const results = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa']).analyze();
   expect(results.violations).toEqual([]);
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Download', exact: true })).toBeFocused();
 
-  // Dropping the blocked format clears the blocker; the zip holds the rest.
-  await page.getByRole('checkbox', { name: /Letter poster/ }).uncheck();
-  const file = await download(page, 'Download all (.zip)');
+  const file = await download(page);
   const names = Object.keys((await JSZip.loadAsync(await bytes(file))).files).sort();
   expect(names).toEqual([
     'alt-text.txt',
@@ -238,29 +265,39 @@ test('a blocker for one format disables its download and the zip until it is res
   ]);
 });
 
-test('text that does not fit disables that format', async ({ page }) => {
+test('text that does not fit takes that format out of the download', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('Pneumonoultramicroscopicsilicovolcanoconiosis');
-  await selectFormat(page, 'portrait-hd');
-  await expect(page.getByRole('button', { name: 'Download PNG of Portrait HD' })).toBeDisabled();
   await expect(statusBar(page)).toContainText("Portrait HD · Title: doesn't fit at minimum size.");
+  const dialog = await openDownload(page);
+  await expect(dialog.getByRole('checkbox', { name: /Portrait HD/ })).toBeDisabled();
 });
 
-test('every download is disabled while a blocker exists, and comes back when it is fixed', async ({ page }) => {
+test('download is blocked while a blocker applies to every format, and comes back when it is fixed', async ({ page }) => {
   await page.getByLabel('Title (required)').fill('');
   await expect(statusBar(page)).toContainText('Title is required.');
-  await expect(page.getByRole('button', { name: 'Download blocked' })).toBeDisabled();
-  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
-    await selectFormat(page, id);
-    for (const button of await page.locator('.selected-actions button').all()) await expect(button).toBeDisabled();
-  }
+  const blocked = page.getByRole('button', { name: 'Download blocked' });
+  await expect(blocked).toBeDisabled();
+  await expect(blocked).toHaveAttribute('aria-describedby', 'status-bar');
 
   await page.getByLabel('Title (required)').fill('Halloween Game Night');
   await expect(statusBar(page)).toContainText('Ready to export');
-  await expect(page.getByRole('button', { name: 'Download all (.zip)' })).toBeEnabled();
-  for (const id of ['landscape-hd', 'portrait-hd', 'letter-poster']) {
-    await selectFormat(page, id);
-    for (const button of await page.locator('.selected-actions button').all()) await expect(button).toBeEnabled();
-  }
+  await expect(page.getByRole('button', { name: 'Download', exact: true })).toBeEnabled();
+});
+
+test('the download dialog: Esc closes it and the button label follows the choices', async ({ page }) => {
+  const dialog = await openDownload(page);
+  const go = dialog.locator('.download-footer .button-primary');
+  await expect(go).toHaveText('Download 3 formats (.zip)');
+  await dialog.getByRole('checkbox', { name: /Portrait HD/ }).uncheck();
+  await dialog.getByRole('checkbox', { name: /Letter poster/ }).uncheck();
+  await expect(go).toHaveText('Download 1 format (.zip)');
+  await dialog.getByLabel(/One \.zip/).uncheck();
+  await expect(go).toHaveText('Download 1 file');
+  await dialog.getByRole('checkbox', { name: /Landscape HD/ }).uncheck();
+  await expect(go).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(dialog).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Download', exact: true })).toBeFocused();
 });
 
 // The spec's target is a typical laptop; shared CI runners are slower, so CI gets more room.
@@ -269,12 +306,13 @@ const RENDER_LIMIT_MS = process.env.CI ? 10_000 : 5_000;
 test('4K and tabloid renders finish in under 5 seconds each', async ({ page }) => {
   await page.getByLabel(/Landscape 4K/).check();
   await page.getByLabel(/Tabloid poster/).check();
-  for (const [card, button] of [
-    ['landscape-4k', 'Download PNG of Landscape 4K'],
-    ['tabloid-poster', 'Download PDF of Tabloid poster'],
-  ]) {
+  for (const card of ['landscape-4k', 'tabloid-poster']) {
+    const dialog = await openDownload(page);
+    for (const box of await dialog.locator('.download-formats input').all())
+      await box.setChecked((await box.getAttribute('id')) === `download-${card}`);
+    await dialog.getByLabel(/One \.zip/).uncheck();
     const start = Date.now();
-    const file = await download(page, button, card);
+    const [file] = await Promise.all([page.waitForEvent('download'), dialog.locator('.download-footer .button-primary').click()]);
     const elapsed = Date.now() - start;
     expect(elapsed, `${card} took ${elapsed} ms`).toBeLessThan(RENDER_LIMIT_MS);
     if (card === 'landscape-4k') expect(pngSize(await bytes(file))).toEqual({ width: 3840, height: 2160 });
